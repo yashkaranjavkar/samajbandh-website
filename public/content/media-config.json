@@ -1,0 +1,90 @@
+{
+  "images": {
+    "hero": {
+      "main_banner": {
+        "title": "Arogya Samwadak Grassroots Drive",
+        "description": "Women artisans and volunteers leading menstrual health awareness in Junnar and Pune.",
+        "url": "/images/fellowship/arogya-samwadak-session.jpg",
+        "local_fallback": "/images/fellowship/arogya-samwadak-session.jpg"
+      },
+      "tribal_rest_shed": {
+        "title": "Gaokor (Kurma Ghar) Reform Project",
+        "description": "Tribal women in Gadchiroli accessing dignified and hygienic rest quarters.",
+        "url": "/images/kurma/community-session-under-tree.jpg",
+        "local_fallback": "/images/kurma/community-session-under-tree.jpg"
+      },
+      "school_workshop": {
+        "title": "Myth-Busting Workshop in ZP High School",
+        "description": "Adolescent girls and boys learning reproductive health biology with anatomical charts.",
+        "url": "/images/samata-yatra/gender-equality-school.jpg",
+        "local_fallback": "/images/samata-yatra/gender-equality-school.jpg"
+      }
+    },
+    "products": {
+      "asha_reusable_pad_kit": {
+        "title": "Asha Reusable 4-Layer Cotton Pad Kit",
+        "description": "100% breathable unbleached cotton pad with leakproof barrier, lasting 3+ years.",
+        "url": "/images/products/asha-menstrual-kit.jpg",
+        "local_fallback": "/images/products/asha-menstrual-kit.jpg"
+      },
+      "hygiene_travel_pouch": {
+        "title": "Waterproof Storage & Travel Pouch",
+        "description": "Dual-compartment zippered pouch for carrying fresh and used pads safely.",
+        "url": "/images/products/asha-menstrual-kit.jpg",
+        "local_fallback": "/images/products/asha-menstrual-kit.jpg"
+      },
+      "educational_flipchart_kit": {
+        "title": "Arogya Samwad MHM Facilitator Flipchart",
+        "description": "Bilingual Marathi/English laminated training kit for community health volunteers.",
+        "url": "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&q=80&w=1000",
+        "local_fallback": "/public/images/products/flipchart_kit.jpg"
+      }
+    },
+    "team": {
+      "sachin_subhash": {
+        "name": "Sachin Asha Subhash",
+        "role": "Founder & Managing Trustee",
+        "url": "/images/team/founder-trustee-sachin.jpg",
+        "local_fallback": "/images/team/founder-trustee-sachin.jpg"
+      },
+      "dr_rekha_patil": {
+        "name": "Dr. Rekha Patil",
+        "role": "Director - Public Health & Medical Advisory",
+        "url": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=600",
+        "local_fallback": "/public/images/team/dr_rekha_patil.jpg"
+      },
+      "anita_shinde": {
+        "name": "Anita Shinde",
+        "role": "Lead - Micro-Center Production & SHG Training",
+        "url": "https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&q=80&w=600",
+        "local_fallback": "/public/images/team/anita_shinde.jpg"
+      }
+    }
+  },
+  "documents": {
+    "annual_report_2025": {
+      "title": "Samajbandh Audited Annual Impact Report 2025-26",
+      "category": "Annual Reports",
+      "url": "/public/docs/transparency/annual_report_2025_26.pdf",
+      "file_size": "2.4 MB"
+    },
+    "tax_exemption_80g": {
+      "title": "Income Tax 80G Approval Certificate (No. CIT(E)/80G/2021-22/A/1042)",
+      "category": "Tax Exemptions",
+      "url": "/public/docs/transparency/80G_certificate_samajbandh.pdf",
+      "file_size": "840 KB"
+    },
+    "csr_1_registration": {
+      "title": "Ministry of Corporate Affairs CSR-1 Filing (CSR00049219)",
+      "category": "CSR Compliance",
+      "url": "/public/docs/transparency/CSR1_registration.pdf",
+      "file_size": "510 KB"
+    },
+    "volunteer_handbook": {
+      "title": "Volunteer & Field Internship Handbook (Guidelines & Code of Conduct)",
+      "category": "Volunteers & Interns",
+      "url": "/public/docs/volunteer/internship_field_handbook.pdf",
+      "file_size": "1.8 MB"
+    }
+  }
+}

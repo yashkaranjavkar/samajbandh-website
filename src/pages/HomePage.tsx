@@ -22,6 +22,7 @@ import {
   GraduationCap
 } from 'lucide-react';
 import { SectionHeading } from '../components/common/SectionHeading';
+import { SdgGoals } from '../components/common/SdgGoals';
 import { StoriesStrip } from '../components/interactive/StoriesStrip';
 import { ImpactCounter } from '../components/interactive/ImpactCounter';
 import { InteractiveMap } from '../components/interactive/InteractiveMap';
@@ -418,6 +419,11 @@ export const HomePage: React.FC<HomePageProps> = ({
                 ))}
               </div>
             </section>
+          ),
+
+          // UN SUSTAINABLE DEVELOPMENT GOALS
+          sdgGoals: (
+            <SdgGoals />
           ),
 
           // 5.6 WHERE DO WE WORK? - Interactive Map in Bento Wrapper

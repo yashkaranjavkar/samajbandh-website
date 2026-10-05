@@ -1,5 +1,6 @@
 import React from 'react';
 import { SectionHeading } from '../components/common/SectionHeading';
+import { SdgGoals } from '../components/common/SdgGoals';
 import { Timeline } from '../components/interactive/Timeline';
 import { Organogram } from '../components/interactive/Organogram';
 import { BottomCTABand } from '../components/layout/BottomCTABand';
@@ -200,6 +201,11 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onOpenDonate }) => {
                 ))}
               </div>
             </section>
+          ),
+
+          // 6.4 UN SUSTAINABLE DEVELOPMENT GOALS
+          sdgGoals: (
+            <SdgGoals />
           ),
 
           // 6.5 TIMELINE (Milestone History)

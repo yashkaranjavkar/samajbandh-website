@@ -93,41 +93,7 @@ export const Header: React.FC<HeaderProps> = ({
     },
     { 
       name: 'About', 
-      path: '/about',
-      tagline: 'Genesis, Vision & Governance',
-      description: 'Our origin story, leadership team, statutory compliance, and contact info.',
-      subLinks: [
-        { 
-          name: 'Our Story & Genesis', 
-          path: '/about', 
-          desc: 'Born from maternal tribute, grounded in human dignity',
-          icon: 'Heart'
-        },
-        { 
-          name: 'Vision, Mission & Values', 
-          path: '/about#vision', 
-          desc: 'Guiding compass and systemic theory of change',
-          icon: 'Target'
-        },
-        { 
-          name: 'Governance & Team', 
-          path: '/about#team', 
-          desc: 'Board of trustees, field directors and advisory council',
-          icon: 'Users'
-        },
-        { 
-          name: 'Audited Transparency & 80G', 
-          path: '/transparency', 
-          desc: '12A, 80G certificates, CSR-1 approvals & annual audits',
-          icon: 'ShieldCheck'
-        },
-        { 
-          name: 'Contact & Regional Hubs', 
-          path: '/contact', 
-          desc: 'Pune HQ, tribal outreach centers and helpline',
-          icon: 'Phone'
-        }
-      ]
+      path: '/about'
     },
     { 
       name: 'Our Work', 

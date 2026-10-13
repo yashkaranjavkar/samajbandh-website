@@ -26,6 +26,7 @@ import { DonateModal } from './components/modals/DonateModal';
 import { GlobalSearchModal } from './components/modals/GlobalSearchModal';
 import { ProgramDetailModal } from './components/modals/ProgramDetailModal';
 import { RegistrationModal } from './components/modals/RegistrationModal';
+import { LanguagePopup } from './components/modals/LanguagePopup';
 
 import { Program, EventItem } from './types';
 import { isSectionVisible } from './config/siteLayout';
@@ -208,6 +209,8 @@ export default function App() {
           isOpen={!!selectedEvent}
           onClose={() => setSelectedEvent(null)}
         />
+
+        <LanguagePopup />
 
       </div>
     </Router>

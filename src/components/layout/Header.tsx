@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { isSectionVisible } from '../../config/siteLayout';
+import { getSavedLanguage, switchLanguage } from '../../services/language';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Menu, 
@@ -27,7 +28,8 @@ import {
   Camera,
   HeartHandshake,
   Target,
-  ArrowRight
+  ArrowRight,
+  Languages
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -45,6 +47,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openMobileAccordion, setOpenMobileAccordion] = useState<string | null>(null);
   const location = useLocation();
+  const isMarathi = getSavedLanguage() === 'mr';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -97,79 +100,11 @@ export const Header: React.FC<HeaderProps> = ({
     },
     { 
       name: 'Our Work', 
-      path: '/our-work',
-      tagline: 'Grassroots Ecosystem',
-      description: 'Grassroots programs across menstrual literacy, livelihoods, and tribal reform.',
-      subLinks: [
-        { 
-          name: 'All Programs Overview', 
-          path: '/our-work', 
-          desc: 'Educate, Engage & Sustain systemic framework',
-          icon: 'Layers'
-        },
-        { 
-          name: 'Asha Pad Micro-Centres', 
-          path: '/our-work?category=livelihood', 
-          desc: '15 decentralized women-led stitching hubs',
-          icon: 'Factory'
-        },
-        { 
-          name: 'Arogya Samwadak Fellowships', 
-          path: '/our-work?category=fellowship', 
-          desc: 'Youth health champions & village educators',
-          icon: 'Award'
-        },
-        { 
-          name: 'Tribal Rest Shed Reforms', 
-          path: '/our-work?category=tribal-outreach', 
-          desc: 'Kurma Sudhar safety infrastructure in Gadchiroli',
-          icon: 'Home'
-        },
-        { 
-          name: 'School & Adolescent Samata', 
-          path: '/our-work?category=school-college', 
-          desc: 'Gender-inclusive biological literacy modules',
-          icon: 'GraduationCap'
-        },
-        { 
-          name: 'Verified Impact & Telemetry', 
-          path: '/impact', 
-          desc: 'Longitudinal data, before/after indicators & voices',
-          icon: 'BarChart3'
-        }
-      ]
+      path: '/our-work'
     },
     { 
       name: 'Products & Services', 
-      path: '/products-services',
-      tagline: 'Eco-Friendly Dignity',
-      description: 'Zero-plastic reusable cloth pads, health kits, and corporate workshops.',
-      subLinks: [
-        { 
-          name: 'Asha Reusable Cloth Pads', 
-          path: '/products-services', 
-          desc: '5-layer leakproof design, 100+ washes, skin-safe',
-          icon: 'ShoppingBag'
-        },
-        { 
-          name: 'Period & Hygiene Kits', 
-          path: '/products-services?tab=products', 
-          desc: 'Complete kits for schools, institutions & CSR drives',
-          icon: 'PackageCheck'
-        },
-        { 
-          name: 'Master Trainer (ToT) Programs', 
-          path: '/products-services?tab=workshops', 
-          desc: 'Certifications for NGOs, educators & health workers',
-          icon: 'Sparkles'
-        },
-        { 
-          name: 'Corporate CSR & School Drives', 
-          path: '/products-services?tab=workshops', 
-          desc: 'Demystification workshops & bulk employee drives',
-          icon: 'Building'
-        }
-      ]
+      path: '/products-services'
     },
     { 
       name: 'Gallery', 
@@ -362,6 +297,18 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Actions: Search, Shop, Volunteer, Donate */}
             <div className="flex items-center space-x-2 sm:space-x-3">
               
+              {/* Language Toggle (notranslate keeps the label readable in both languages) */}
+              <button
+                id="language-toggle-btn"
+                onClick={() => switchLanguage(isMarathi ? 'en' : 'mr')}
+                className="notranslate inline-flex items-center gap-1.5 p-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors focus:outline-hidden border border-transparent hover:border-slate-200"
+                aria-label={isMarathi ? 'Switch to English' : 'मराठीमध्ये पहा'}
+                title={isMarathi ? 'Switch to English' : 'मराठीमध्ये पहा'}
+              >
+                <Languages className="w-4 h-4" />
+                <span>{isMarathi ? 'EN' : 'मराठी'}</span>
+              </button>
+
               {/* Search Toggle */}
               <button
                 id="search-toggle-btn"

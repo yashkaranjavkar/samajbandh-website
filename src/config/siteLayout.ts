@@ -38,6 +38,7 @@ export const SITE_LAYOUT = {
     { id: 'storiesStrip', label: 'Scrolling strip of photo story cards', show: true },
     { id: 'challengeVision', label: 'The root challenge + Vision & Mission', show: true },
     { id: 'impactNumbers', label: 'Impact numbers (counters)', show: true },
+    { id: 'documentary', label: 'Field documentary video', show: true },
     { id: 'programs', label: 'Signature programs cards', show: true },
     { id: 'sdgGoals', label: 'UN Sustainable Development Goals (SDGs) we contribute to', show: true },
     { id: 'map', label: 'Interactive “Where we work” map', show: true },

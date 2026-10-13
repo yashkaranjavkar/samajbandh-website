@@ -36,7 +36,8 @@ import {
   EVENTS_DATA, 
   PRODUCTS_DATA, 
   PARTNERS_DATA, 
-  AWARDS_DATA 
+  AWARDS_DATA,
+  VIDEOS_DATA 
 } from '../data/mockData';
 import { Program, EventItem } from '../types';
 import { ApiService } from '../services/api';
@@ -82,6 +83,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHeroPlaying, setIsHeroPlaying] = useState(true);
+  const [isDocumentaryPlaying, setIsDocumentaryPlaying] = useState(false);
 
   // Join us form state
   const [joinType, setJoinType] = useState('volunteer');
@@ -123,6 +125,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   };
 
   const featuredProgram = PROGRAMS_DATA[0]; // Arogya Samwadak
+  const documentary = VIDEOS_DATA[0];
 
   return (
     <div className="space-y-16 sm:space-y-24 py-6 sm:py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -340,6 +343,61 @@ export const HomePage: React.FC<HomePageProps> = ({
               />
               <div className="mt-6">
                 <ImpactCounter stats={IMPACT_STATS} />
+              </div>
+            </section>
+          ),
+
+          // FIELD DOCUMENTARY VIDEO
+          documentary: (
+            <section className="bg-slate-900 text-white py-12 sm:py-16 px-6 sm:px-10 lg:px-14 rounded-[2.5rem] border border-slate-800 shadow-2xl" aria-label="Field Documentary">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div className="lg:col-span-5 space-y-4">
+                  <span className="text-xs uppercase font-bold text-amber-400 tracking-widest block">
+                    Field Documentary
+                  </span>
+                  <h3 className="text-2xl sm:text-3xl font-black text-white leading-tight">
+                    {documentary.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
+                    {documentary.description}
+                  </p>
+                  {!isDocumentaryPlaying && (
+                    <button
+                      onClick={() => setIsDocumentaryPlaying(true)}
+                      className="px-6 py-3.5 bg-[#C85A32] hover:bg-[#b54c26] text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center gap-2 shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <Play className="w-4 h-4 fill-white" />
+                      <span>Watch Documentary ({documentary.duration})</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="lg:col-span-7 relative rounded-[2rem] overflow-hidden shadow-2xl border-2 border-slate-700 aspect-video bg-black">
+                  {isDocumentaryPlaying ? (
+                    <iframe
+                      src={`${documentary.videoUrl}?autoplay=1`}
+                      title={documentary.title}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setIsDocumentaryPlaying(true)}
+                      className="w-full h-full flex items-center justify-center group"
+                      aria-label={`Play ${documentary.title}`}
+                    >
+                      <img
+                        src={documentary.thumbnailUrl}
+                        alt="Documentary thumbnail"
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
+                      />
+                      <span className="relative w-16 h-16 rounded-full bg-[#C85A32] text-white flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                        <Play className="w-7 h-7 fill-white ml-1" />
+                      </span>
+                    </button>
+                  )}
+                </div>
               </div>
             </section>
           ),

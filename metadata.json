@@ -1,0 +1,6 @@
+{
+  "name": "Samajbandh",
+  "description": "Digital platform for Samajbandh — dedicated to menstrual health awareness, menstrual equity, reusable cloth pad production, community fellowships, and social empowerment.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

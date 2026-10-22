@@ -132,8 +132,13 @@ export const GetInvolvedPage: React.FC<GetInvolvedPageProps> = ({ onOpenDonate }
   if (!email.trim()) errors.email = 'Email is required.';
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) errors.email = 'Enter a valid email, e.g. name@example.com';
   const phoneDigits = phone.replace(/\D/g, '');
-  if (!phone.trim()) errors.phone = 'WhatsApp / phone number is required.';
-  else if (!/^\d+$/.test(phoneDigits) || phoneDigits.length < 6 || phoneDigits.length > 15) errors.phone = 'Enter a valid phone number (6–15 digits, excluding country code).';
+  if (!phone.trim()) 
+    errors.phone = 'WhatsApp / phone number is required.';
+  else if (!/^\d+$/.test(phoneDigits) || phoneDigits.length < 6 || phoneDigits.length > 15) 
+    errors.phone = 'Enter a valid phone number (6–15 digits, excluding country code).';
+  if (countryCode === "+91" && phoneDigits.length !== 10) {
+    errors.phone = "For +91, enter exactly 10 digits.";
+  }
   if (!country && !countryIsOther) errors.country = 'Select a country.';
   if (countryIsOther && !otherCountry.trim()) errors.country = 'Enter your country.';
   if (!stateRegion && !stateIsOther) errors.state = 'Select a state.';

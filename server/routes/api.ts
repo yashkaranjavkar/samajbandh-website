@@ -48,7 +48,8 @@ apiRouter.use((req: Request, res: Response, next) => {
     '/events/registrations', '/media', '/admin/backup'
   ];
   const protectedPath = protectedPaths.some(p => path === p || path.startsWith(`${p}/`));
-  if (protectedPath) return requireAdmin(req, res, next);
+  if (protectedPath) 
+    return requireAdmin(req, res, next);
   next();
 });
 
@@ -94,6 +95,8 @@ apiRouter.post('/join-us', async (req: Request, res: Response) => {
       commitmentHours = 'part-time',
       message
     } = req.body;
+
+    // console.log(req.body)
 
     if (!name || !email || !phone) {
       return res.status(400).json({ success: false, message: 'Name, email, and phone are mandatory.' });

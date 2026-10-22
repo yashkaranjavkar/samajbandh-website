@@ -228,7 +228,12 @@ export const ApiService = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
-      if (res.ok) return await res.json();
+      // const data_res = await res.json();
+
+      // console.log('Backend status:', res.status);
+      // console.log('Backend response:', data_res);
+      if (res.ok) 
+        return await res.json();
       await throwIfRejected(res);
     } catch (err) {
       if (err instanceof SubmitError) throw err;

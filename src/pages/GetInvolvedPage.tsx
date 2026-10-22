@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { GetCountries, GetState, GetCity } from 'react-country-state-city';
 import { SectionHeading } from '../components/common/SectionHeading';
@@ -28,6 +28,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { PageSections } from '../components/layout/PageSections';
+
 
 type GeoItem = { id: number; name: string };
 const DEFAULT_COUNTRY: GeoItem = { id: 101, name: 'India' };
@@ -92,6 +93,7 @@ export const GetInvolvedPage: React.FC<GetInvolvedPageProps> = ({ onOpenDonate }
   const [notes, setNotes] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [successMessage, setSuccessMessage] = useState('');
+  const successRef = useRef<HTMLDivElement>(null);
 
   // Handle URL sync
   useEffect(() => {
@@ -207,6 +209,7 @@ export const GetInvolvedPage: React.FC<GetInvolvedPageProps> = ({ onOpenDonate }
     }
 
     setStatus('loading');
+    
     try {
       const response = await ApiService.submitJoinUs({
         name,
@@ -226,6 +229,13 @@ export const GetInvolvedPage: React.FC<GetInvolvedPageProps> = ({ onOpenDonate }
         message: notes
       });
       setStatus('success');
+      requestAnimationFrame(() => {
+        successRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      });
+      
       setSuccessMessage(response?.message || 'Your application has been received.');
     } catch {
       setStatus('error');
@@ -706,7 +716,10 @@ export const GetInvolvedPage: React.FC<GetInvolvedPageProps> = ({ onOpenDonate }
                 </div>
 
                 {status === 'success' ? (
-                  <div className="bg-white p-8 sm:p-12 rounded-3xl border border-[#E5DFC5] text-center space-y-5 max-w-xl mx-auto shadow-lg">
+                  <div 
+                  ref={successRef}
+                  tabIndex={-1}
+                  className="bg-white p-8 sm:p-12 rounded-3xl border border-[#E5DFC5] text-center space-y-5 max-w-xl mx-auto shadow-lg">
                     <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
                       <CheckCircle2 className="w-9 h-9" />
                     </div>

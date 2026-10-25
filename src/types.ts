@@ -272,3 +272,8 @@ export interface TransparencyDoc {
   fileUrl: string;
   verifiedDate: string;
 }
+
+export interface SocialMedia {
+  id: string;
+  url: string;
+}

@@ -135,6 +135,8 @@ export interface Product {
   images: string[];
   badge?: string;
   contents?: string[];
+  lifespan?: string;
+  benefit?: string;
 }
 
 export interface TrainingProgram {

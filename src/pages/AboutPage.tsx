@@ -5,7 +5,7 @@ import { Timeline } from '../components/interactive/Timeline';
 import { Organogram } from '../components/interactive/Organogram';
 import { BottomCTABand } from '../components/layout/BottomCTABand';
 import { CountUpNumber } from '../components/common/CountUpNumber';
-import { AWARDS_DATA } from '../data/mockData';
+import { AWARDS_DATA, TEAM_INFO } from '../data/mockData';
 import { 
   Heart, 
   ShieldCheck, 
@@ -24,6 +24,10 @@ import { PageSections } from '../components/layout/PageSections';
 interface AboutPageProps {
   onOpenDonate: () => void;
 }
+
+const founder = TEAM_INFO.find(
+  (member) => member.id === 'founder'
+);
 
 export const AboutPage: React.FC<AboutPageProps> = ({ onOpenDonate }) => {
   return (
@@ -66,20 +70,22 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onOpenDonate }) => {
                     </div>
                   </div>
 
-                  <div className="lg:col-span-5">
-                    <div className="relative rounded-[2rem] overflow-hidden shadow-2xl border-2 border-slate-700">
-                      <img
-                        src="/images/team/founder-trustee-sachin.jpg"
-                        alt="Sachin Asha Subhash - Founder Samajbandh"
-                        className="w-full h-96 object-cover object-top bg-white"
-                      />
-                      <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-6">
-                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Founder & Managing Trustee</span>
-                        <h3 className="text-xl font-black text-white mt-0.5">Sachin Asha Subhash</h3>
-                        <p className="text-xs text-emerald-300 font-medium">MSW (Tata Institute of Social Sciences) • Grassroots Innovator</p>
+                  {founder && (
+                    <div className="lg:col-span-5">
+                      <div className="relative rounded-[2rem] overflow-hidden shadow-2xl border-2 border-slate-700">
+                        <img
+                          src={founder.photoUrl}
+                          alt={`${founder.name} - ${founder.role}`}
+                          className="w-full h-96 object-cover object-top bg-white"
+                        />
+                        <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-6">
+                          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">{founder.role}</span>
+                          <h3 className="text-xl font-black text-white mt-0.5">{founder.name}</h3>
+                          <p className="text-xs text-emerald-300 font-medium">{founder.about}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                 </div>
               </div>
@@ -213,7 +219,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onOpenDonate }) => {
             <section aria-label="Organizational Milestones">
               <SectionHeading
                 eyebrow="Our Journey"
-                title="Milestones in Menstrual Equity (2018 - 2026)"
+                title={`Milestones in Menstrual Equity (2018 - ${new Date().getFullYear()})`}
                 subtitle="From a grassroots pilot in Junnar to a statewide movement touching over 120 villages."
                 centered
               />

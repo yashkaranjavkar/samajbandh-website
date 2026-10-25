@@ -85,7 +85,7 @@ export const Timeline: React.FC = () => {
                 : 'bg-white border-[#143D2B] group-hover:bg-[#143D2B]'
             }`} />
 
-            <div className="hidden md:block absolute -left-32 top-1 w-24 text-right">
+            <div className="hidden md:block absolute -left-39 top-1 w-28 text-right">
               <span className="text-sm font-bold text-[#143D2B]">{milestone.year}</span>
             </div>
 

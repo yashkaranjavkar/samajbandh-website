@@ -71,16 +71,16 @@ export const ProductsServicesPage: React.FC<ProductsServicesPageProps> = ({
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
                       <div className="p-3.5 bg-white/10 rounded-2xl border border-white/15">
-                        <span className="text-xl font-bold font-serif-heading text-[#D99B26] block">₹280</span>
+                        <span className="text-xl font-bold font-serif-heading text-[#D99B26] block">₹{mainPad.price}</span>
                         <span className="text-xs text-emerald-200">Pack of 4 Pads + Pouch</span>
                       </div>
                       <div className="p-3.5 bg-white/10 rounded-2xl border border-white/15">
-                        <span className="text-xl font-bold font-serif-heading text-emerald-300 block">3+ Years</span>
-                        <span className="text-xs text-emerald-200">Life Span (100+ Washes)</span>
+                        <span className="text-xl font-bold font-serif-heading text-emerald-300 block">{mainPad.lifespan?.split('|')[0]}</span>
+                        <span className="text-xs text-emerald-200">{mainPad.lifespan?.split('|')[1]}</span>
                       </div>
                       <div className="p-3.5 bg-white/10 rounded-2xl border border-white/15">
-                        <span className="text-xl font-bold font-serif-heading text-[#C85A32] block">₹4,500+</span>
-                        <span className="text-xs text-emerald-200">Saved per menstruator</span>
+                        <span className="text-xl font-bold font-serif-heading text-[#C85A32] block">{mainPad.benefit?.split('|')[0]}</span>
+                        <span className="text-xs text-emerald-200">{mainPad.benefit?.split('|')[1]}</span>
                       </div>
                     </div>
 

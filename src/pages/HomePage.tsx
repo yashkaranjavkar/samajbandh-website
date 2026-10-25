@@ -803,153 +803,153 @@ export const HomePage: React.FC<HomePageProps> = ({
           ),
 
           // 5.12 JOIN US FORM SECTION - Bento Pod
-          joinForm: (
-            <section aria-label="Join the Movement">
-              <div className="bg-white rounded-[2.5rem] p-8 sm:p-12 border border-slate-200 shadow-xl">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          // joinForm: (
+          //   <section aria-label="Join the Movement">
+          //     <div className="bg-white rounded-[2.5rem] p-8 sm:p-12 border border-slate-200 shadow-xl">
+          //       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             
-                  <div className="lg:col-span-5 space-y-4">
-                    <span className="text-xs font-bold uppercase text-[#C85A32] tracking-widest">
-                      Community Action
-                    </span>
-                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-                      Join the Samajbandh Movement
-                    </h2>
-                    <p className="text-sm text-slate-600 leading-relaxed">
-                      Whether you want to volunteer on-ground, donate clean cotton cloth for pad liners, sponsor village clusters, or partner as an institution — your action restores dignity to menstruators.
-                    </p>
+          //         <div className="lg:col-span-5 space-y-4">
+          //           <span className="text-xs font-bold uppercase text-[#C85A32] tracking-widest">
+          //             Community Action
+          //           </span>
+          //           <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
+          //             Join the Samajbandh Movement
+          //           </h2>
+          //           <p className="text-sm text-slate-600 leading-relaxed">
+          //             Whether you want to volunteer on-ground, donate clean cotton cloth for pad liners, sponsor village clusters, or partner as an institution — your action restores dignity to menstruators.
+          //           </p>
 
-                    <div className="space-y-3 pt-2">
-                      {[
-                        '1. Volunteer for School & Village Circles',
-                        '2. Donate Clean Cotton Cloth for Liners',
-                        '3. CSR & Institutional Partnerships',
-                        '4. Academic Research Collaboration',
-                        '5. Spread the Word in Your City'
-                      ].map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-2.5 text-xs font-bold text-slate-800">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                          <span>{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+          //           <div className="space-y-3 pt-2">
+          //             {[
+          //               '1. Volunteer for School & Village Circles',
+          //               '2. Donate Clean Cotton Cloth for Liners',
+          //               '3. CSR & Institutional Partnerships',
+          //               '4. Academic Research Collaboration',
+          //               '5. Spread the Word in Your City'
+          //             ].map((item, idx) => (
+          //               <div key={idx} className="flex items-center gap-2.5 text-xs font-bold text-slate-800">
+          //                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          //                 <span>{item}</span>
+          //               </div>
+          //             ))}
+          //           </div>
+          //         </div>
 
-                  <div className="lg:col-span-7 bg-slate-50 p-6 sm:p-8 rounded-[2rem] border border-slate-200">
-                    {joinStatus === 'success' ? (
-                      <div className="text-center py-10 space-y-3">
-                        <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
-                          <CheckCircle2 className="w-7 h-7" />
-                        </div>
-                        <h3 className="text-lg font-bold text-slate-900">
-                          Thank You for Stepping Up!
-                        </h3>
-                        <p className="text-xs text-slate-600 max-w-sm mx-auto">
-                          We have received your details. Our volunteer & engagement coordinator will contact you via email/phone shortly.
-                        </p>
-                        <button
-                          onClick={() => setJoinStatus('idle')}
-                          className="mt-2 text-xs font-bold text-emerald-700 hover:underline"
-                        >
-                          Submit another response
-                        </button>
-                      </div>
-                    ) : (
-                      <form onSubmit={handleJoinSubmit} className="space-y-4">
-                        <div>
-                          <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
-                            Preferred Way to Contribute *
-                          </label>
-                          <select
-                            value={joinType}
-                            onChange={(e) => setJoinType(e.target.value)}
-                            className="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all font-medium"
-                          >
-                            <option value="volunteer">Become a Ground / Digital Volunteer</option>
-                            <option value="donate-cloth">Donate Clean Cotton Cloth</option>
-                            <option value="csr-partner">Corporate CSR Partnership</option>
-                            <option value="school-workshop">Host a School / College Workshop</option>
-                            <option value="fellowship">Inquire About Arogya Samwadak Fellowship</option>
-                          </select>
-                        </div>
+          //         <div className="lg:col-span-7 bg-slate-50 p-6 sm:p-8 rounded-[2rem] border border-slate-200">
+          //           {joinStatus === 'success' ? (
+          //             <div className="text-center py-10 space-y-3">
+          //               <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
+          //                 <CheckCircle2 className="w-7 h-7" />
+          //               </div>
+          //               <h3 className="text-lg font-bold text-slate-900">
+          //                 Thank You for Stepping Up!
+          //               </h3>
+          //               <p className="text-xs text-slate-600 max-w-sm mx-auto">
+          //                 We have received your details. Our volunteer & engagement coordinator will contact you via email/phone shortly.
+          //               </p>
+          //               <button
+          //                 onClick={() => setJoinStatus('idle')}
+          //                 className="mt-2 text-xs font-bold text-emerald-700 hover:underline"
+          //               >
+          //                 Submit another response
+          //               </button>
+          //             </div>
+          //           ) : (
+          //             <form onSubmit={handleJoinSubmit} className="space-y-4">
+          //               <div>
+          //                 <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
+          //                   Preferred Way to Contribute *
+          //                 </label>
+          //                 <select
+          //                   value={joinType}
+          //                   onChange={(e) => setJoinType(e.target.value)}
+          //                   className="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all font-medium"
+          //                 >
+          //                   <option value="volunteer">Become a Ground / Digital Volunteer</option>
+          //                   <option value="donate-cloth">Donate Clean Cotton Cloth</option>
+          //                   <option value="csr-partner">Corporate CSR Partnership</option>
+          //                   <option value="school-workshop">Host a School / College Workshop</option>
+          //                   <option value="fellowship">Inquire About Arogya Samwadak Fellowship</option>
+          //                 </select>
+          //               </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1">Full Name *</label>
-                            <input
-                              type="text"
-                              value={joinName}
-                              onChange={(e) => setJoinName(e.target.value)}
-                              placeholder="Your Name"
-                              className="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all"
-                              required
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1">City / District *</label>
-                            <input
-                              type="text"
-                              value={joinCity}
-                              onChange={(e) => setJoinCity(e.target.value)}
-                              placeholder="e.g. Pune, Mumbai, Nashik"
-                              className="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all"
-                              required
-                            />
-                          </div>
-                        </div>
+          //               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          //                 <div>
+          //                   <label className="block text-xs font-semibold text-slate-600 mb-1">Full Name *</label>
+          //                   <input
+          //                     type="text"
+          //                     value={joinName}
+          //                     onChange={(e) => setJoinName(e.target.value)}
+          //                     placeholder="Your Name"
+          //                     className="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all"
+          //                     required
+          //                   />
+          //                 </div>
+          //                 <div>
+          //                   <label className="block text-xs font-semibold text-slate-600 mb-1">City / District *</label>
+          //                   <input
+          //                     type="text"
+          //                     value={joinCity}
+          //                     onChange={(e) => setJoinCity(e.target.value)}
+          //                     placeholder="e.g. Pune, Mumbai, Nashik"
+          //                     className="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all"
+          //                     required
+          //                   />
+          //                 </div>
+          //               </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1">Email Address *</label>
-                            <input
-                              type="email"
-                              value={joinEmail}
-                              onChange={(e) => setJoinEmail(e.target.value)}
-                              placeholder="you@example.com"
-                              className="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all"
-                              required
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1">Phone / WhatsApp *</label>
-                            <input
-                              type="tel"
-                              value={joinPhone}
-                              onChange={(e) => setJoinPhone(e.target.value)}
-                              placeholder="+91 98765 43210"
-                              className="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all"
-                              required
-                            />
-                          </div>
-                        </div>
+          //               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          //                 <div>
+          //                   <label className="block text-xs font-semibold text-slate-600 mb-1">Email Address *</label>
+          //                   <input
+          //                     type="email"
+          //                     value={joinEmail}
+          //                     onChange={(e) => setJoinEmail(e.target.value)}
+          //                     placeholder="you@example.com"
+          //                     className="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all"
+          //                     required
+          //                   />
+          //                 </div>
+          //                 <div>
+          //                   <label className="block text-xs font-semibold text-slate-600 mb-1">Phone / WhatsApp *</label>
+          //                   <input
+          //                     type="tel"
+          //                     value={joinPhone}
+          //                     onChange={(e) => setJoinPhone(e.target.value)}
+          //                     placeholder="+91 98765 43210"
+          //                     className="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all"
+          //                     required
+          //                   />
+          //                 </div>
+          //               </div>
 
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-600 mb-1">Tell us briefly about your interest / skills</label>
-                          <textarea
-                            rows={2}
-                            value={joinMsg}
-                            onChange={(e) => setJoinMsg(e.target.value)}
-                            placeholder="e.g. I am a medical student available on weekends for awareness drives..."
-                            className="w-full px-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all"
-                          ></textarea>
-                        </div>
+          //               <div>
+          //                 <label className="block text-xs font-semibold text-slate-600 mb-1">Tell us briefly about your interest / skills</label>
+          //                 <textarea
+          //                   rows={2}
+          //                   value={joinMsg}
+          //                   onChange={(e) => setJoinMsg(e.target.value)}
+          //                   placeholder="e.g. I am a medical student available on weekends for awareness drives..."
+          //                   className="w-full px-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all"
+          //                 ></textarea>
+          //               </div>
 
-                        <button
-                          type="submit"
-                          disabled={joinStatus === 'loading'}
-                          className="w-full py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2"
-                        >
-                          <Send className="w-4 h-4" />
-                          <span>{joinStatus === 'loading' ? 'Submitting...' : 'Submit Join Request'}</span>
-                        </button>
-                      </form>
-                    )}
-                  </div>
+          //               <button
+          //                 type="submit"
+          //                 disabled={joinStatus === 'loading'}
+          //                 className="w-full py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2"
+          //               >
+          //                 <Send className="w-4 h-4" />
+          //                 <span>{joinStatus === 'loading' ? 'Submitting...' : 'Submit Join Request'}</span>
+          //               </button>
+          //             </form>
+          //           )}
+          //         </div>
 
-                </div>
-              </div>
-            </section>
-          ),
+          //       </div>
+          //     </div>
+          //   </section>
+          // ),
 
           // 5.13 BOTTOM CTA BAND
           bottomCta: (

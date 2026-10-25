@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import type { VolunteerRecord } from './database.js';
+import type { VolunteerRecord, BulkOrderRecord } from './database.js';
 
 const connectionString = process.env.DATABASE_URL;
 export const pgPool = connectionString ? new Pool({
@@ -31,5 +31,80 @@ export async function persistVolunteerToPostgres(record: VolunteerRecord): Promi
     [record.id,record.name,record.email,record.phone,record.city,record.collegeOrOrg || null,record.roleType,record.duration,
      record.startDate || null,record.endDate || null,record.mode || null,record.commitmentHours || null,JSON.stringify(record.domains || []),
      record.message || null,record.status,record.adminNotes || null,record.createdAt,record.updatedAt]);
+  return true;
+}
+
+export async function persistBulkOrdersToPostgres(
+  record: BulkOrderRecord
+): Promise<boolean> {
+
+  if (!pgPool) {
+    console.warn(
+      '[PostgreSQL] DATABASE_URL is not configured; record remains in the local JSON store only.'
+    );
+    return false;
+  }
+
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS bulk_order_inquiries (
+      id TEXT PRIMARY KEY,
+      organization_name VARCHAR(255) NOT NULL,
+      contact_person VARCHAR(255) NOT NULL,
+      designation VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL,
+      phone VARCHAR(20) NOT NULL,
+      item_type VARCHAR(255) NOT NULL,
+      quantity INTEGER NOT NULL,
+      notes TEXT NOT NULL,
+      status VARCHAR(30) NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await pgPool.query(
+    `INSERT INTO bulk_order_inquiries (
+      id,
+      organization_name,
+      contact_person,
+      designation,
+      email,
+      phone,
+      item_type,
+      quantity,
+      notes,
+      status,
+      created_at,
+      updated_at
+    )
+    VALUES (
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      organization_name = EXCLUDED.organization_name,
+      contact_person = EXCLUDED.contact_person,
+      designation = EXCLUDED.designation,
+      email = EXCLUDED.email,
+      phone = EXCLUDED.phone,
+      quantity = EXCLUDED.quantity,
+      notes = EXCLUDED.notes,
+      status = EXCLUDED.status,
+      updated_at = EXCLUDED.updated_at`,
+    [
+      record.id,
+      record.organization,
+      record.name,
+      record.role,
+      record.email,
+      record.phone,
+      record.product,
+      record.quantity,
+      record.notes,
+      record.status || 'pending',
+      record.createdAt || new Date(),
+      record.updatedAt || new Date(),
+    ]
+  );
+
   return true;
 }

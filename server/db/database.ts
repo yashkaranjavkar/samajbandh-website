@@ -56,13 +56,16 @@ export interface BulkOrderRecord {
   product: string;
   quantity: number;
   name: string;
+  role: string;
   organization: string;
   email: string;
   phone: string;
-  deliveryAddress: string;
+  deliveryAddress?: string;
   notes?: string;
+  // otherItem?: string;
   status: 'inquiry' | 'quoted' | 'confirmed' | 'dispatched' | 'fulfilled';
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface EventRegistrationRecord {
@@ -214,14 +217,16 @@ const INITIAL_DB: DatabaseSchema = {
       id: 'ord-201',
       product: 'Asha Reusable Cloth Pads (Pack of 4)',
       quantity: 500,
+      role: "Founder",
       name: 'Vikas Deshpande',
       organization: 'Gramin Vikas Pratishthan',
       email: 'vikas@gvp.org',
       phone: '+91 94220 88776',
-      deliveryAddress: 'At Post Bhamragad, Gadchiroli, Maharashtra - 442710',
+      // deliveryAddress: 'At Post Bhamragad, Gadchiroli, Maharashtra - 442710',
       notes: 'For distribution during monsoon health outreach drive.',
       status: 'quoted',
-      createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
+      createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
     }
   ],
   eventRegistrations: [],
@@ -417,12 +422,13 @@ class DatabaseService {
     return [...this.data.bulkOrders].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
-  public addBulkOrder(record: Omit<BulkOrderRecord, 'id' | 'status' | 'createdAt'>): BulkOrderRecord {
+  public addBulkOrder(record: Omit<BulkOrderRecord, 'id' | 'status' | 'createdAt' | 'updatedAt'>): BulkOrderRecord {
     const newRecord: BulkOrderRecord = {
       ...record,
       id: `ord-${Date.now().toString().slice(-6)}`,
       status: 'inquiry',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     this.data.bulkOrders.unshift(newRecord);
     this.saveData(this.data);

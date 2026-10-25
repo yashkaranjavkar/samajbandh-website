@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { db } from '../db/database.js';
-import { persistVolunteerToPostgres } from '../db/postgres.js';
+import { persistBulkOrdersToPostgres, persistVolunteerToPostgres } from '../db/postgres.js';
 import { sendVolunteerApplicationEmails } from '../email.js';
 import { clearAdminCookie, createAdminSession, requireAdmin, setAdminCookie, verifyAdminCredentials } from '../adminAuth.js';
 
@@ -44,7 +44,7 @@ apiRouter.get('/admin/session', requireAdmin, (_req: Request, res: Response) => 
 apiRouter.use((req: Request, res: Response, next) => {
   const path = req.path;
   const protectedPaths = [
-    '/stats/overview', '/volunteers', '/donations', '/contacts', '/bulk-orders',
+    '/stats/overview', '/volunteers', '/donations', '/contacts', '/get-bulk-orders',
     '/events/registrations', '/media', '/admin/backup'
   ];
   const protectedPath = protectedPaths.some(p => path === p || path.startsWith(`${p}/`));
@@ -342,7 +342,7 @@ apiRouter.post(['/contacts', '/contact'], (req: Request, res: Response) => {
 });
 
 // 6. Bulk Pad Orders API
-apiRouter.get('/bulk-orders', (_req: Request, res: Response) => {
+apiRouter.get('/get-bulk-orders', (_req: Request, res: Response) => {
   try {
     const orders = db.getBulkOrders();
     res.json({ success: true, count: orders.length, data: orders });
@@ -351,9 +351,11 @@ apiRouter.get('/bulk-orders', (_req: Request, res: Response) => {
   }
 });
 
-apiRouter.post('/bulk-orders', (req: Request, res: Response) => {
+apiRouter.post('/bulk-orders', async (req: Request, res: Response) => {
+
   try {
-    const { product, quantity, name, organization, email, phone, deliveryAddress, notes } = req.body;
+    const { product, quantity, name, role, organization, email, phone, notes} = req.body;
+     
     if (!name || !email || !product || !quantity) {
       return res.status(400).json({ success: false, message: 'Product, quantity, name, and email are required.' });
     }
@@ -362,16 +364,21 @@ apiRouter.post('/bulk-orders', (req: Request, res: Response) => {
       product,
       quantity: Number(quantity),
       name,
+      role,
       organization: organization || 'Individual / Institution',
       email,
       phone: phone || '',
-      deliveryAddress: deliveryAddress || '',
       notes
     });
 
+    let postgresSaved = false
+
+    try { postgresSaved = await persistBulkOrdersToPostgres(record); } catch (err) { console.error('[PostgreSQL] Could not save volunteer application:', err); }
+
     res.status(201).json({
       success: true,
-      message: 'Bulk inquiry received! Our logistics team will share the institutional quote & timeline.',
+      message: `Bulk inquiry received for order id: ${record.id}! Our logistics team will share the institutional quote & timeline.`,
+      postgresSaved,
       data: record
     });
   } catch (error: any) {

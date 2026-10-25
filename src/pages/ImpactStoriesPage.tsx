@@ -188,7 +188,7 @@ export const ImpactStoriesPage: React.FC<ImpactStoriesPageProps> = ({ onOpenDona
                         referrerPolicy="no-referrer"
                       />
                       <div className="absolute top-4 left-4 bg-slate-900/90 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider backdrop-blur-xs border border-slate-700">
-                        {story.category.replace('-', ' ')}
+                        {story.category}
                       </div>
                       <div className="absolute bottom-4 left-4 right-4 bg-slate-950/80 backdrop-blur-xs p-3.5 rounded-2xl text-white text-xs flex items-center justify-between border border-slate-800">
                         <span className="flex items-center gap-1.5 font-medium">

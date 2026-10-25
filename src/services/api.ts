@@ -323,7 +323,7 @@ export const ApiService = {
     return { success: true, message: 'Registration confirmed! A confirmation pass will be emailed to you.' };
   },
 
-  async submitBulkOrder(data: { organizationName: string; contactPerson: string; email: string; phone: string; itemType: string; quantity: number; notes: string }) {
+  async submitBulkOrder(data: { organizationName: string; contactPerson: string; designation: string; email: string; phone: string; itemType: string; quantity: number; notes: string}) {
     try {
       const res = await fetch(`${API_BASE}/bulk-orders`, {
         method: 'POST',
@@ -332,6 +332,7 @@ export const ApiService = {
           product: data.itemType,
           quantity: data.quantity,
           name: data.contactPerson,
+          role: data.designation,
           organization: data.organizationName,
           email: data.email,
           phone: data.phone,

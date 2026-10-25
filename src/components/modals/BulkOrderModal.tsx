@@ -139,6 +139,7 @@ export const BulkOrderModal: React.FC<BulkOrderModalProps> = ({
       </p>
     ) : null;
 
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -149,7 +150,7 @@ export const BulkOrderModal: React.FC<BulkOrderModalProps> = ({
       email,
       phone,
       itemType,
-      otherItem: itemType === 'Other' ? otherItem : 'not-required',
+      otherItem,
       quantity,
       notes,
     };
@@ -157,11 +158,17 @@ export const BulkOrderModal: React.FC<BulkOrderModalProps> = ({
     const nextErrors: FormErrors = {};
 
     (Object.keys(values) as FieldName[]).forEach((field) => {
+      // Validate the custom product only when "Other" is selected.
       if (field === 'otherItem' && itemType !== 'Other') {
         return;
       }
 
-      const error = validateField(field, values[field]);
+      const value =
+        field === 'itemType' && itemType === 'Other'
+          ? otherItem
+          : values[field];
+
+      const error = validateField(field, value);
 
       if (error) {
         nextErrors[field] = error;
@@ -184,23 +191,20 @@ export const BulkOrderModal: React.FC<BulkOrderModalProps> = ({
         designation: designation.trim(),
         email: email.trim(),
         phone: `+91${phone}`,
-        itemType:
-          itemType === 'Other'
-            ? otherItem.trim()
-            : itemType,
-        otherItem:
-          itemType === 'Other'
-            ? otherItem.trim()
-            : '',
+        // Store the custom product name directly in itemType.
+        itemType: itemType === 'Other' ? otherItem.trim() : itemType,
+        // The custom product is not duplicated in other_item.
         quantity: Number(quantity),
         notes: notes.trim(),
       });
 
       setStatus('success');
-    } catch {
+    } catch (error) {
+      console.error('Failed to submit bulk order:', error);
       setStatus('error');
     }
   };
+
 
   const handleReset = () => {
     setStatus('idle');

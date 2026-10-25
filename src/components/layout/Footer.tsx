@@ -15,6 +15,7 @@ import {
   Award
 } from 'lucide-react';
 import { ApiService } from '../../services/api';
+import { FOOTER_LINKS_DATA } from '@/src/data/mockData';
 
 export const Footer: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -135,6 +136,31 @@ export const Footer: React.FC = () => {
 
             {/* Social Bento Bar */}
             <div className="flex items-center space-x-2.5 pt-2">
+              {FOOTER_LINKS_DATA.map((social) => {
+                const Icon = {
+                  instagram: Instagram,
+                  linkedin: Linkedin,
+                  youtube: Youtube,
+                  facebook: Facebook,
+                }[social.id];
+
+                if (!Icon) return null;
+
+                return (
+                  <a
+                    key={social.id}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.id}
+                    className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#C85A32] flex items-center justify-center text-slate-300 hover:text-white transition-colors border border-slate-700"
+                  >
+                    <Icon className="w-4 h-4" />
+                  </a>
+                );
+              })}
+            </div>
+            {/* <div className="flex items-center space-x-2.5 pt-2">
               <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram" className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#C85A32] flex items-center justify-center text-slate-300 hover:text-white transition-colors border border-slate-700">
                 <Instagram className="w-4 h-4" />
               </a>
@@ -147,7 +173,7 @@ export const Footer: React.FC = () => {
               <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook" className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#C85A32] flex items-center justify-center text-slate-300 hover:text-white transition-colors border border-slate-700">
                 <Facebook className="w-4 h-4" />
               </a>
-            </div>
+            </div> */}
           </div>
 
           {/* Bento Tile 2: Strategic Pillars & Work */}

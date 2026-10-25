@@ -15,7 +15,7 @@ import {
   Award
 } from 'lucide-react';
 import { ApiService } from '../../services/api';
-import { FOOTER_LINKS_DATA } from '@/src/data/mockData';
+import { FOOTER_LINKS_DATA, CONTACTS_INFO } from '@/src/data/mockData';
 
 export const Footer: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -216,15 +216,15 @@ export const Footer: React.FC = () => {
             <div className="space-y-3 text-slate-400 text-xs">
               <p className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                <span>Samajbandh Central Office, Pune, Maharashtra 411030</span>
+                <span>{CONTACTS_INFO.address}</span>
               </p>
               <p className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-amber-400 shrink-0" />
-                <a href="tel:+919876543210" className="hover:text-white transition-colors">+91 98765 43210</a>
+                <a href={`tel:${CONTACTS_INFO.contact_number.replace(/\s/g, '')}`} className="hover:text-white transition-colors">{CONTACTS_INFO.contact_number}</a>
               </p>
               <p className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-indigo-400 shrink-0" />
-                <a href="mailto:contact@samajbandh.org" className="hover:text-white transition-colors">contact@samajbandh.org</a>
+                <a href={`mailto:${CONTACTS_INFO.mail_id}`} className="hover:text-white transition-colors">{CONTACTS_INFO.mail_id}</a>
               </p>
             </div>
 

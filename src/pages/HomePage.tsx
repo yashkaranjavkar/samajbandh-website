@@ -42,6 +42,7 @@ import {
 import { Program, EventItem } from '../types';
 import { ApiService } from '../services/api';
 import { PageSections } from '../components/layout/PageSections';
+import { toYouTubeEmbedUrl } from '../services/youtube';
 
 interface HomePageProps {
   onOpenDonate: () => void;
@@ -126,6 +127,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   const featuredProgram = PROGRAMS_DATA[0]; // Arogya Samwadak
   const documentary = VIDEOS_DATA[0];
+  const hasDocumentaryVideo = documentary.videoUrl.trim() !== '';
 
   return (
     <div className="space-y-16 sm:space-y-24 py-6 sm:py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -361,7 +363,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
                     {documentary.description}
                   </p>
-                  {!isDocumentaryPlaying && (
+                  {hasDocumentaryVideo && !isDocumentaryPlaying && (
                     <button
                       onClick={() => setIsDocumentaryPlaying(true)}
                       className="px-6 py-3.5 bg-[#C85A32] hover:bg-[#b54c26] text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center gap-2 shadow-lg hover:scale-[1.02] active:scale-[0.98]"
@@ -375,12 +377,23 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <div className="lg:col-span-7 relative rounded-[2rem] overflow-hidden shadow-2xl border-2 border-slate-700 aspect-video bg-black">
                   {isDocumentaryPlaying ? (
                     <iframe
-                      src={`${documentary.videoUrl}?autoplay=1`}
+                      src={toYouTubeEmbedUrl(documentary.videoUrl, { autoplay: true })}
                       title={documentary.title}
                       className="w-full h-full"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                     />
+                  ) : !hasDocumentaryVideo ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <img
+                        src={documentary.thumbnailUrl}
+                        alt="Documentary thumbnail"
+                        className="absolute inset-0 w-full h-full object-cover opacity-80"
+                      />
+                      <span className="relative px-4 py-2 rounded-full bg-black/70 backdrop-blur-xs border border-white/20 text-white text-xs font-bold uppercase tracking-wider">
+                        Video coming soon
+                      </span>
+                    </div>
                   ) : (
                     <button
                       onClick={() => setIsDocumentaryPlaying(true)}
@@ -775,9 +788,20 @@ export const HomePage: React.FC<HomePageProps> = ({
                     key={partner.id}
                     className="p-6 rounded-[2rem] bg-white border border-slate-200 flex flex-col items-center justify-center text-center shadow-xs hover:border-slate-300 hover:scale-[1.02] transition-all"
                   >
-                    <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mb-3 border border-slate-100">
-                      <Building className="w-6 h-6 text-slate-700" />
-                    </div>
+                    {partner.logo ? (
+                      <div className="h-20 w-full flex items-center justify-center mb-3">
+                        <img
+                          src={partner.logo}
+                          alt={`${partner.name} logo`}
+                          className="max-h-full max-w-[85%] object-contain"
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mb-3 border border-slate-100">
+                        <Building className="w-6 h-6 text-slate-700" />
+                      </div>
+                    )}
                     <h4 className="text-xs font-bold text-slate-900">{partner.name}</h4>
                     <span className="text-[10px] text-slate-500 font-medium mt-1">{partner.partnershipYear}</span>
                   </div>

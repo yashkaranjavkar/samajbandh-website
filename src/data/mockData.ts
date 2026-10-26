@@ -867,7 +867,7 @@ export const PARTNERS_DATA: Partner[] = [
     id: 'part-1',
     name: 'Tata Trusts Rural Health Initiative',
     type: 'Institutional',
-    logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?q=80&w=200&auto=format&fit=crop',
+    logo: '/images/partners/tata-trusts.webp',
     description: 'Technical and capacity-building partner for tribal MHM fellowships in Gadchiroli.',
     partnershipYear: 'Since 2021'
   },
@@ -875,7 +875,7 @@ export const PARTNERS_DATA: Partner[] = [
     id: 'part-2',
     name: 'Maharashtra State Rural Livelihoods Mission (UMED)',
     type: 'Government',
-    logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?q=80&w=200&auto=format&fit=crop',
+    logo: '/images/partners/umed.jpg',
     description: 'Collaboration for Self-Help Group (SHG) micro-production centre establishment and buybacks.',
     partnershipYear: 'Since 2020'
   },
@@ -883,7 +883,6 @@ export const PARTNERS_DATA: Partner[] = [
     id: 'part-3',
     name: 'Apex Engineering CSR Foundation',
     type: 'CSR',
-    logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?q=80&w=200&auto=format&fit=crop',
     description: 'Strategic CSR donor supporting solar infrastructure and emergency school kits.',
     partnershipYear: 'Since 2022'
   }
@@ -1259,7 +1258,7 @@ export const GALLERY_ITEMS: GalleryItem[] = [
     caption: 'Watch how tribal women in Gadchiroli transformed their health and village norms.',
     category: 'video',
     url: '/images/kurma/kurma-hut-night.jpg',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: '', // paste the YouTube link here; empty = thumbnail only, "coming soon",
     type: 'video',
     location: 'Gadchiroli',
     date: '2025'
@@ -1274,7 +1273,7 @@ export const VIDEOS_DATA: VideoItem[] = [
     title: 'Voices of Dignity: Inside the Gaokor Rest Shed Transformation in Gadchiroli',
     description: 'A 10-minute documentary exploring how tribal elders, women, and Samajbandh fellows united to reform centuries-old menstrual isolation.',
     duration: '10:24',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: '', // paste the YouTube link here; empty = thumbnail only, "coming soon",
     thumbnailUrl: '/images/kurma/kurma-hut-entrance.jpg',
     category: 'documentary',
     date: '2025'

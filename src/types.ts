@@ -112,7 +112,7 @@ export interface VideoItem {
   title: string;
   description: string;
   duration: string;
-  videoUrl: string;
+  videoUrl: string; // YouTube link in any format; '' shows the thumbnail as "coming soon"
   thumbnailUrl: string;
   category: 'documentary' | 'interview' | 'workshop' | 'impact';
   date: string;
@@ -248,7 +248,7 @@ export interface Partner {
   id: string;
   name: string;
   type: 'CSR' | 'Institutional' | 'Government' | 'Academic' | 'NGO';
-  logo: string;
+  logo?: string; // path under public/, e.g. '/images/partners/name.png'; icon shown if missing
   description: string;
   partnershipYear: string;
 }

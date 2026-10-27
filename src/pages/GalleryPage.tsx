@@ -37,10 +37,13 @@ export const GalleryPage: React.FC<GalleryPageProps> = ({ onOpenDonate }) => {
     ? GALLERY_DATA
     : GALLERY_DATA.filter(g => g.category === activeCategory);
 
+  // Video items with no link yet open their thumbnail as a photo
+  const hasVideo = (item: GalleryItem) => item.type === 'video' && !!item.videoUrl?.trim();
+
   const handleOpenItem = (item: GalleryItem) => {
     setLightboxMedia({
-      type: item.type,
-      url: item.type === 'video' && item.videoUrl ? item.videoUrl : item.url,
+      type: hasVideo(item) ? 'video' : 'image',
+      url: hasVideo(item) ? item.videoUrl : item.url,
       title: item.title,
       caption: item.caption,
       location: item.location,
@@ -112,7 +115,15 @@ export const GalleryPage: React.FC<GalleryPageProps> = ({ onOpenDonate }) => {
                         referrerPolicy="no-referrer"
                       />
 
-                      {item.type === 'video' && (
+                      {item.type === 'video' && !hasVideo(item) && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                          <span className="px-3 py-1.5 rounded-full bg-black/70 border border-white/20 text-white text-[10px] font-bold uppercase tracking-wider">
+                            Video coming soon
+                          </span>
+                        </div>
+                      )}
+
+                      {hasVideo(item) && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                           <div className="w-12 h-12 rounded-full bg-[#C85A32] text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                             <Play className="w-5 h-5 fill-white ml-0.5" />

@@ -21,6 +21,9 @@ import {
 } from 'lucide-react';
 import { PageSections } from '../components/layout/PageSections';
 
+// YouTube link for the field documentary (any link format). Leave '' to show the thumbnail as "coming soon".
+const DOCUMENTARY_VIDEO_URL = '';
+
 interface ImpactStoriesPageProps {
   onOpenDonate: () => void;
 }
@@ -28,6 +31,15 @@ interface ImpactStoriesPageProps {
 export const ImpactStoriesPage: React.FC<ImpactStoriesPageProps> = ({ onOpenDonate }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [lightboxMedia, setLightboxMedia] = useState<any>(null);
+  const hasDocumentaryVideo = DOCUMENTARY_VIDEO_URL.trim() !== '';
+  const openDocumentary = () => setLightboxMedia({
+    type: 'video',
+    url: DOCUMENTARY_VIDEO_URL,
+    title: 'Asha — The Threads of Dignity (Field Documentary)',
+    caption: 'Filmed on location in Bhamragad and Kurkheda, Maharashtra.',
+    location: 'Gadchiroli Tribal District',
+    date: '2025'
+  });
 
   const filterCategories = [
     { id: 'all', label: 'All Testimonies' },
@@ -295,31 +307,38 @@ export const ImpactStoriesPage: React.FC<ImpactStoriesPageProps> = ({ onOpenDona
                   <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
                     A 7-minute documentary capturing the daily lives of tribal women in Gadchiroli who transformed a taboo seclusion hut into a thriving solar-powered health hub.
                   </p>
-                  <button
-                    onClick={() => setLightboxMedia({
-                      type: 'video',
-                      url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                      title: 'Asha — The Threads of Dignity (Field Documentary)',
-                      caption: 'Filmed on location in Bhamragad and Kurkheda, Maharashtra.',
-                      location: 'Gadchiroli Tribal District',
-                      date: '2025'
-                    })}
+                  {hasDocumentaryVideo && (
+                    <button
+                      onClick={openDocumentary}
+                  // <button
+                  //   onClick={() => setLightboxMedia({
+                  //     type: 'video',
+                  //     url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                  //     title: 'Asha — The Threads of Dignity (Field Documentary)',
+                  //     caption: 'Filmed on location in Bhamragad and Kurkheda, Maharashtra.',
+                  //     location: 'Gadchiroli Tribal District',
+                  //     date: '2025'
+                  //   })}
                     className="px-6 py-3.5 bg-[#C85A32] hover:bg-[#b54c26] text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center gap-2 shadow-lg hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <Play className="w-4 h-4 fill-white" />
                     <span>Watch Short Film (7 mins)</span>
                   </button>
+                  )}
                 </div>
 
-                <div className="lg:col-span-6 relative rounded-[2rem] overflow-hidden shadow-2xl border-2 border-slate-700 aspect-video bg-black flex items-center justify-center group cursor-pointer"
-                  onClick={() => setLightboxMedia({
-                    type: 'video',
-                    url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                    title: 'Asha — The Threads of Dignity (Field Documentary)',
-                    caption: 'Filmed on location in Bhamragad and Kurkheda, Maharashtra.',
-                    location: 'Gadchiroli Tribal District',
-                    date: '2025'
-                  })}
+                <div className={`lg:col-span-6 relative rounded-[2rem] overflow-hidden shadow-2xl border-2 border-slate-700 aspect-video bg-black flex items-center justify-center group ${hasDocumentaryVideo ? 'cursor-pointer' : ''}`}
+                  onClick={hasDocumentaryVideo ? openDocumentary : undefined}
+
+                // <div className="lg:col-span-6 relative rounded-[2rem] overflow-hidden shadow-2xl border-2 border-slate-700 aspect-video bg-black flex items-center justify-center group cursor-pointer"
+                //   onClick={() => setLightboxMedia({
+                //     type: 'video',
+                //     url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                //     title: 'Asha — The Threads of Dignity (Field Documentary)',
+                //     caption: 'Filmed on location in Bhamragad and Kurkheda, Maharashtra.',
+                //     location: 'Gadchiroli Tribal District',
+                //     date: '2025'
+                //   })}
                 >
                   <img
                     src="/images/kurma/kurma-hut-night.jpg"
@@ -327,9 +346,18 @@ export const ImpactStoriesPage: React.FC<ImpactStoriesPageProps> = ({ onOpenDona
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute w-16 h-16 rounded-full bg-[#C85A32] text-white flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                  {/* <div className="absolute w-16 h-16 rounded-full bg-[#C85A32] text-white flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
                     <Play className="w-7 h-7 fill-white ml-1" />
-                  </div>
+                  </div> */}
+                  {hasDocumentaryVideo ? (
+                    <div className="absolute w-16 h-16 rounded-full bg-[#C85A32] text-white flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                      <Play className="w-7 h-7 fill-white ml-1" />
+                    </div>
+                  ) : (
+                    <span className="absolute px-4 py-2 rounded-full bg-black/70 backdrop-blur-xs border border-white/20 text-white text-xs font-bold uppercase tracking-wider">
+                      Video coming soon
+                    </span>
+                  )}
                 </div>
               </div>
             </section>

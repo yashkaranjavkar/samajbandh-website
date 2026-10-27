@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { SectionHeading } from '../components/common/SectionHeading';
 import { BottomCTABand } from '../components/layout/BottomCTABand';
 import { BulkOrderModal } from '../components/modals/BulkOrderModal';
-import { PRODUCTS_DATA, WORKSHOPS_SERVICES } from '../data/mockData';
+import { PRODUCTS_DATA, WORKSHOPS_SERVICES, DONATION_PAYMENT_URL } from '../data/mockData';
 import { 
   ShoppingBag, 
   Layers, 
@@ -96,7 +96,8 @@ export const ProductsServicesPage: React.FC<ProductsServicesPageProps> = ({
                         <span>Order Retail / Bulk Packs</span>
                       </button>
                       <button
-                        onClick={onOpenDonate}
+                        // onClick={onOpenDonate}
+                        onClick={() => window.open(DONATION_PAYMENT_URL, "_blank", "noopener,noreferrer")}
                         className="px-6 py-3.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-sm border border-white/20 transition-all flex items-center gap-2"
                       >
                         <Heart className="w-4 h-4 fill-white" />
@@ -312,7 +313,8 @@ export const ProductsServicesPage: React.FC<ProductsServicesPageProps> = ({
                           Order / Inquire
                         </button>
                         <button
-                          onClick={onOpenDonate}
+                          // onClick={onOpenDonate}
+                          onClick={() => window.open(DONATION_PAYMENT_URL, "_blank", "noopener,noreferrer")}
                           className="flex-1 py-2.5 rounded-xl border border-[#C85A32] text-[#C85A32] hover:bg-[#C85A32]/10 font-bold text-xs transition-colors"
                         >
                           Sponsor This Kit

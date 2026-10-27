@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, MapPin, Calendar } from 'lucide-react';
+import { toYouTubeEmbedUrl } from '../../services/youtube';
 
 interface LightboxModalProps {
   isOpen: boolean;
@@ -49,7 +50,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
           ) : (
             <div className="w-full aspect-video">
               <iframe
-                src={media.url}
+                src={toYouTubeEmbedUrl(media.url, { autoplay: true })}
                 title={media.title}
                 className="w-full h-full border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

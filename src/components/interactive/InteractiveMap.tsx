@@ -3,6 +3,27 @@ import { LOCATIONS_DATA, PROGRAMS_DATA } from '../../data/mockData';
 import { ProgramLocation } from '../../types';
 import { MapPin, Factory, Users, CheckCircle, ArrowRight, Layers, Sparkles } from 'lucide-react';
 import { CountUpNumber } from '../common/CountUpNumber';
+import { MAHARASHTRA_DISTRICTS, MAHARASHTRA_VIEWBOX, projectToMap } from '../../data/maharashtraMap';
+
+// Pins on the map. `district` must match a name in MAHARASHTRA_DISTRICTS (Census 2011 spelling).
+// Pins whose id has no record in LOCATIONS_DATA are shown but not clickable for details yet.
+const MAP_PINS: {
+  id: string;
+  label: string;
+  district: string;
+  lat: number;
+  lng: number;
+  variant: 'default' | 'hub' | 'tribal';
+}[] = [
+  // { id: 'loc-nandurbar', label: 'Nandurbar', district: 'Nandurbar', lat: 21.3700, lng: 74.2400, variant: 'default' },
+  { id: 'loc-nashik', label: 'Nashik', district: 'Nashik', lat: 19.9975, lng: 73.7898, variant: 'default' },
+  { id: 'loc-pune', label: 'Pune (HQ & Hub)', district: 'Pune', lat: 18.5204, lng: 73.8567, variant: 'hub' },
+  // { id: 'loc-satara', label: 'Satara', district: 'Satara', lat: 17.6805, lng: 74.0183, variant: 'default' },
+  // { id: 'loc-solapur', label: 'Solapur', district: 'Solapur', lat: 17.6599, lng: 75.9064, variant: 'default' },
+  { id: 'loc-gadchiroli', label: 'Gadchiroli (Kurma Sudhar)', district: 'Garhchiroli', lat: 20.1849, lng: 80.0030, variant: 'tribal' }
+];
+
+const PIN_DISTRICTS = new Set(MAP_PINS.map(p => p.district));
 
 interface InteractiveMapProps {
   onSelectProgram?: (programSlug: string) => void;
@@ -19,15 +40,83 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     if (loc) setSelectedLocation(loc);
   };
 
+  // const mapLegend = (
+  //   <div className="flex flex-wrap sm:flex-col sm:items-end gap-x-4 gap-y-1 text-[10px] sm:text-[11px] text-slate-400">
+  //     <span className="flex items-center gap-1.5 font-medium">
+  //       <span className="w-2 h-2 rounded-full bg-[#C85A32]"></span>
+  //       Active Intervention Hubs
+  //     </span>
+  //     <span className="flex items-center gap-1.5 font-medium">
+  //       <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+  //       Central Master Training Hub
+  //     </span>
+  //     <span className="font-semibold text-emerald-400">15 Production Units Across 120 Villages</span>
+  //   </div>
+  // );
+  const mapLegend = (
+    <div className="flex flex-col items-start gap-y-1 text-[10px] sm:text-[11px] text-slate-400">
+      <span className="flex items-center gap-1.5 font-medium whitespace-nowrap">
+        <span className="w-2 h-2 rounded-full bg-[#C85A32] shrink-0"></span>
+        Active Intervention Hubs
+      </span>
+
+      <span className="flex items-center gap-1.5 font-medium whitespace-nowrap">
+        <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+        Central Master Training Hub
+      </span>
+
+      <span className="font-semibold text-emerald-400 whitespace-nowrap">
+        15 Production Units Across 120 Villages
+      </span>
+    </div>
+  );
+
+  // District Quick Select Pills
+  // const districtButtons = (
+  //   <div className="flex flex-wrap sm:justify-end gap-2">
+  //     {LOCATIONS_DATA.map((loc) => (
+  //       <button
+  //         key={loc.id}
+  //         onClick={() => setSelectedLocation(loc)}
+  //         className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all uppercase tracking-wider ${
+  //           selectedLocation.id === loc.id
+  //             ? 'bg-white text-slate-950 shadow-md'
+  //             : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+  //         }`}
+  //       >
+  //         {loc.district}
+  //       </button>
+  //     ))}
+  //   </div>
+  // );
+  const districtButtons = (
+    <div className="flex flex-wrap justify-center gap-2">
+      {LOCATIONS_DATA.map((loc) => (
+        <button
+          key={loc.id}
+          onClick={() => setSelectedLocation(loc)}
+          className={`px-4 py-2 rounded-xl text-[11px] font-bold
+            transition-all uppercase tracking-wider ${
+                selectedLocation.id === loc.id
+                  ? 'bg-white text-slate-950 shadow-md'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
+        >
+          {loc.district}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
-    <div className="bg-slate-900 rounded-[2.5rem] p-6 sm:p-8 lg:p-12 border border-slate-800 text-white shadow-2xl overflow-hidden relative">
+    <div className="bg-slate-900 rounded-[2.5rem] p-6 sm:p-8 lg:p-10 border border-slate-800 text-white shadow-2xl overflow-hidden relative">
       {/* Glow Effects */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="flex flex-col lg:flex-row gap-8 items-start relative z-10">
         
         {/* Left: Map Canvas & Location Selector */}
-        <div className="w-full lg:w-7/12 space-y-6">
+        <div className="w-full lg:w-7/12 space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <span className="text-xs uppercase font-bold text-amber-400 tracking-widest flex items-center gap-1.5">
@@ -43,180 +132,129 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             </div>
           </div>
 
-          {/* Interactive Visual Map Representation */}
-          <div className="relative bg-slate-950/80 rounded-[2rem] p-6 border border-slate-800 aspect-4/3 sm:aspect-16/10 flex flex-col justify-between overflow-hidden shadow-inner">
+          {/* Map of Maharashtra with district boundaries and program pins */}
+          <div className="relative bg-slate-950/80 rounded-[2rem] p-4 sm:p-6 border border-slate-800 overflow-hidden shadow-inner">
             
-            {/* Map Grid Background Lines */}
-            <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px] opacity-40"></div>
+            {/* Map Grid Background Dots */}
+            <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none"></div>
 
-            {/* Stylized Maharashtra Outline Accent */}
-            <svg 
-              className="absolute inset-0 w-full h-full opacity-20 text-emerald-400 pointer-events-none p-4" 
-              viewBox="0 0 100 100" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="0.75"
+            <div
+              className="relative w-full mx-auto"
+              style={{
+                aspectRatio: `${MAHARASHTRA_VIEWBOX.width} / ${MAHARASHTRA_VIEWBOX.height}`,
+                // Cap the map's height to the screen so the legend and district buttons below stay visible
+                maxWidth: `max(320px, calc((100vh - 340px) * ${MAHARASHTRA_VIEWBOX.width / MAHARASHTRA_VIEWBOX.height}))`
+              }}
             >
-              <path d="M 20,25 Q 35,15 60,18 Q 85,20 90,35 Q 92,55 80,75 Q 65,85 45,80 Q 25,82 15,65 Q 12,45 20,25 Z" />
-              <path d="M 30,35 Q 50,30 70,38 Q 75,60 55,70 Q 35,68 30,35 Z" strokeDasharray="2 2" />
-            </svg>
-
-            {/* Region Location Pins */}
-            <div className="relative w-full h-full">
-              
-              {/* Nandurbar (Top Left) */}
-              <button
-                onClick={() => selectLocation('loc-nandurbar')}
-                className={`absolute top-[12%] left-[22%] -translate-x-1/2 -translate-y-1/2 group focus:outline-hidden z-20 ${
-                  selectedLocation.id === 'loc-nandurbar' ? 'scale-115' : 'hover:scale-105'
-                } transition-all`}
+              <svg
+                className="absolute inset-0 w-full h-full"
+                viewBox={`0 0 ${MAHARASHTRA_VIEWBOX.width} ${MAHARASHTRA_VIEWBOX.height}`}
+                role="img"
+                aria-label="Map of Maharashtra showing districts where Samajbandh works"
               >
-                <div className={`p-2 rounded-full flex items-center justify-center shadow-lg transition-all ${
-                  selectedLocation.id === 'loc-nandurbar' ? 'bg-[#C85A32] ring-4 ring-[#C85A32]/40 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                }`}>
-                  <MapPin className="w-4 h-4" />
-                </div>
-                <span className={`text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full mt-1 block whitespace-nowrap shadow-md ${
-                  selectedLocation.id === 'loc-nandurbar' ? 'bg-[#C85A32] text-white' : 'bg-slate-900/90 text-slate-300 border border-slate-700'
-                }`}>
-                  Nandurbar
-                </span>
-              </button>
+                {/* State outline: a thick stroke under the district fills leaves a glow only on the outer border */}
+                <g fill="none" stroke="#34d399" strokeOpacity="0.35" strokeWidth="6" strokeLinejoin="round">
+                  {MAHARASHTRA_DISTRICTS.map((d) => <path key={d.name} d={d.path} />)}
+                </g>
 
-              {/* Nashik (Mid-North) */}
-              <button
-                onClick={() => selectLocation('loc-nashik')}
-                className={`absolute top-[32%] left-[26%] -translate-x-1/2 -translate-y-1/2 group focus:outline-hidden z-20 ${
-                  selectedLocation.id === 'loc-nashik' ? 'scale-115' : 'hover:scale-105'
-                } transition-all`}
-              >
-                <div className={`p-2 rounded-full flex items-center justify-center shadow-lg transition-all ${
-                  selectedLocation.id === 'loc-nashik' ? 'bg-[#C85A32] ring-4 ring-[#C85A32]/40 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                }`}>
-                  <MapPin className="w-4 h-4" />
-                </div>
-                <span className={`text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full mt-1 block whitespace-nowrap shadow-md ${
-                  selectedLocation.id === 'loc-nashik' ? 'bg-[#C85A32] text-white' : 'bg-slate-900/90 text-slate-300 border border-slate-700'
-                }`}>
-                  Nashik
-                </span>
-              </button>
+                {MAHARASHTRA_DISTRICTS.map((d) => {
+                  const pin = MAP_PINS.find(p => p.district === d.name);
+                  const isSelected = pin?.id === selectedLocation.id;
+                  return (
+                    <path
+                      key={d.name}
+                      d={d.path}
+                      onClick={pin ? () => selectLocation(pin.id) : undefined}
+                      className={`transition-colors duration-300 ${pin ? 'cursor-pointer' : ''}`}
+                      fill={isSelected ? '#C85A32' : PIN_DISTRICTS.has(d.name) ? '#14532d' : '#1e293b'}
+                      fillOpacity={isSelected ? 0.55 : 0.9}
+                      stroke="#475569"
+                      strokeWidth="1"
+                      strokeLinejoin="round"
+                    >
+                      <title>{d.name === 'Garhchiroli' ? 'Gadchiroli' : d.name}</title>
+                    </path>
+                  );
+                })}
+              </svg>
 
-              {/* Pune (Central West Hub) */}
-              <button
-                onClick={() => selectLocation('loc-pune')}
-                className={`absolute top-[52%] left-[34%] -translate-x-1/2 -translate-y-1/2 group focus:outline-hidden z-20 ${
-                  selectedLocation.id === 'loc-pune' ? 'scale-120' : 'hover:scale-105'
-                } transition-all`}
-              >
-                <div className={`p-2.5 rounded-full flex items-center justify-center shadow-xl transition-all ${
-                  selectedLocation.id === 'loc-pune' ? 'bg-[#C85A32] ring-4 ring-[#C85A32]/40 text-white' : 'bg-amber-400 text-slate-950 font-bold'
-                }`}>
-                  <Factory className="w-4 h-4" />
-                </div>
-                <span className={`text-[11px] sm:text-xs font-bold px-3 py-0.5 rounded-full mt-1 block whitespace-nowrap shadow-md ${
-                  selectedLocation.id === 'loc-pune' ? 'bg-[#C85A32] text-white' : 'bg-amber-400 text-slate-950'
-                }`}>
-                  Pune (HQ & Hub)
-                </span>
-              </button>
+              {/* Region Location Pins (positioned from real latitude/longitude) */}
+              {MAP_PINS.map((pin) => {
+                const { x, y } = projectToMap(pin.lat, pin.lng);
+                const left = (x / MAHARASHTRA_VIEWBOX.width) * 100;
+                const top = (y / MAHARASHTRA_VIEWBOX.height) * 100;
+                const isSelected = selectedLocation.id === pin.id;
+                const labelOnLeft = left > 70;
+                const Icon = pin.variant === 'hub' ? Factory : MapPin;
 
-              {/* Satara (South West) */}
-              <button
-                onClick={() => selectLocation('loc-satara')}
-                className={`absolute top-[68%] left-[32%] -translate-x-1/2 -translate-y-1/2 group focus:outline-hidden z-20 ${
-                  selectedLocation.id === 'loc-satara' ? 'scale-115' : 'hover:scale-105'
-                } transition-all`}
-              >
-                <div className={`p-2 rounded-full flex items-center justify-center shadow-lg transition-all ${
-                  selectedLocation.id === 'loc-satara' ? 'bg-[#C85A32] ring-4 ring-[#C85A32]/40 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                }`}>
-                  <MapPin className="w-4 h-4" />
-                </div>
-                <span className={`text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full mt-1 block whitespace-nowrap shadow-md ${
-                  selectedLocation.id === 'loc-satara' ? 'bg-[#C85A32] text-white' : 'bg-slate-900/90 text-slate-300 border border-slate-700'
-                }`}>
-                  Satara
-                </span>
-              </button>
+                const markerClass = isSelected
+                  ? 'bg-[#C85A32] ring-4 ring-[#C85A32]/40 text-white'
+                  : pin.variant === 'hub'
+                    ? 'bg-amber-400 text-slate-950'
+                    : pin.variant === 'tribal'
+                      ? 'bg-emerald-600 text-white ring-2 ring-emerald-400/50'
+                      : 'bg-slate-700 text-slate-200 hover:bg-slate-600';
+                const labelClass = isSelected
+                  ? 'bg-[#C85A32] text-white'
+                  : pin.variant === 'hub'
+                    ? 'bg-amber-400 text-slate-950'
+                    : 'bg-slate-900/90 text-slate-200 border border-slate-700';
 
-              {/* Solapur (South Central) */}
-              <button
-                onClick={() => selectLocation('loc-solapur')}
-                className={`absolute top-[66%] left-[54%] -translate-x-1/2 -translate-y-1/2 group focus:outline-hidden z-20 ${
-                  selectedLocation.id === 'loc-solapur' ? 'scale-115' : 'hover:scale-105'
-                } transition-all`}
-              >
-                <div className={`p-2 rounded-full flex items-center justify-center shadow-lg transition-all ${
-                  selectedLocation.id === 'loc-solapur' ? 'bg-[#C85A32] ring-4 ring-[#C85A32]/40 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                }`}>
-                  <MapPin className="w-4 h-4" />
-                </div>
-                <span className={`text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full mt-1 block whitespace-nowrap shadow-md ${
-                  selectedLocation.id === 'loc-solapur' ? 'bg-[#C85A32] text-white' : 'bg-slate-900/90 text-slate-300 border border-slate-700'
-                }`}>
-                  Solapur
-                </span>
-              </button>
+                return (
+                  <button
+                    key={pin.id}
+                    onClick={() => selectLocation(pin.id)}
+                    style={{ left: `${left}%`, top: `${top}%` }}
+                    className={`absolute -translate-y-1/2 ${labelOnLeft ? '-translate-x-[calc(100%-0.875rem)] flex-row-reverse' : '-translate-x-3.5'} flex items-center gap-1.5 focus:outline-hidden transition-transform ${
+                      isSelected ? 'z-30 scale-110' : 'z-20 hover:scale-105'
+                    }`}
+                    aria-label={`Show details for ${pin.label}`}
+                    aria-pressed={isSelected}
+                  >
+                    <span className={`w-7 h-7 rounded-full flex items-center justify-center shadow-lg shrink-0 transition-colors ${markerClass}`}>
+                      <Icon className="w-3.5 h-3.5" />
+                    </span>
+                    <span className={`text-[9px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow-md transition-colors ${labelClass}`}>
+                      {pin.label}
+                    </span>
+                  </button>
+                );
+              })}
 
-              {/* Gadchiroli Tribal Region (East Forest Belt) */}
-              <button
-                onClick={() => selectLocation('loc-gadchiroli')}
-                className={`absolute top-[44%] left-[82%] -translate-x-1/2 -translate-y-1/2 group focus:outline-hidden z-20 ${
-                  selectedLocation.id === 'loc-gadchiroli' ? 'scale-120' : 'hover:scale-105'
-                } transition-all`}
-              >
-                <div className={`p-2.5 rounded-full flex items-center justify-center shadow-xl transition-all ${
-                  selectedLocation.id === 'loc-gadchiroli' ? 'bg-[#C85A32] ring-4 ring-[#C85A32]/40 text-white' : 'bg-emerald-600 text-white ring-2 ring-emerald-400/50'
-                }`}>
-                  <MapPin className="w-4 h-4" />
-                </div>
-                <span className={`text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full mt-1 block whitespace-nowrap shadow-md ${
-                  selectedLocation.id === 'loc-gadchiroli' ? 'bg-[#C85A32] text-white' : 'bg-slate-900/90 text-slate-300 border border-slate-700'
-                }`}>
-                  Gadchiroli (Kurma Sudhar)
-                </span>
-              </button>
-
-            </div>
-
-            {/* Map Legend Footer */}
-            <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] sm:text-xs text-slate-400 pt-2 border-t border-slate-800">
-              <span className="flex items-center gap-1.5 font-medium">
-                <span className="w-2 h-2 rounded-full bg-[#C85A32]"></span>
-                Active Intervention Hubs
-              </span>
-              <span className="flex items-center gap-1.5 font-medium">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                Central Master Training Hub
-              </span>
-              <span className="font-semibold text-emerald-400">15 Production Units Across 120 Villages</span>
+              {/* Legend & district buttons sit in the map's empty south-east corner on larger screens */}
+              <div className="hidden sm:flex absolute right-0 bottom-0 max-w-[46%] flex-col items-end gap-3 z-10">
+                {/* {districtButtons} */}
+                {mapLegend}
+              </div>
             </div>
           </div>
 
-          {/* District Quick Select Pills */}
-          <div className="flex flex-wrap gap-2">
-            {LOCATIONS_DATA.map((loc) => (
-              <button
-                key={loc.id}
-                onClick={() => setSelectedLocation(loc)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all uppercase tracking-wider ${
-                  selectedLocation.id === loc.id
-                    ? 'bg-white text-slate-950 shadow-md'
-                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                }`}
-              >
-                {loc.district}
-              </button>
-            ))}
+          {/* Below the map on phones, where the corner is too small */}
+          <div className="sm:hidden space-y-3">
+            {mapLegend}
+            {/* {districtButtons} */}
           </div>
+          {/* District selector and legend below the map on all screen sizes */}
+            <div className="mt-5 w-full space-y-4">
+              {/* District names */}
+              <div className="flex justify-center">
+                {districtButtons}
+              </div>
+
+              {/* Map legend and supporting information */}
+              {/* <div className="flex justify-center">
+                <div className="max-w-full">
+                  {mapLegend}
+                </div>
+              </div> */}
+            </div>
         </div>
 
         {/* Right: Detailed Location & Program Card */}
-        <div className="w-full lg:w-5/12 bg-white text-slate-900 rounded-[2rem] p-6 sm:p-7 shadow-xl border border-slate-200 space-y-4">
+        <div className="w-full lg:w-5/12 bg-white text-slate-900 rounded-[2rem] p-6 sm:p-7 shadow-xl border border-slate-200 space-y-4 lg:space-y-3">
           
           {/* Location Image & Header */}
-          <div className="relative h-40 rounded-[1.5rem] overflow-hidden">
+          <div className="relative h-40 lg:h-32 rounded-[1.5rem] overflow-hidden">
             <img
               src={selectedLocation.image}
               alt={selectedLocation.name}

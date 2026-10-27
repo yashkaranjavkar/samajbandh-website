@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Users, ArrowRight } from 'lucide-react';
+import { DONATION_PAYMENT_URL } from "../../data/mockData"
 
 interface BottomCTABandProps {
   onOpenDonate: () => void;
@@ -47,7 +48,8 @@ export const BottomCTABand: React.FC<BottomCTABandProps> = ({
 
             <button
               id="cta-band-donate-btn"
-              onClick={onOpenDonate}
+              // onClick={onOpenDonate}
+              onClick={() => window.open(DONATION_PAYMENT_URL, "_blank", "noopener,noreferrer")}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl text-xs font-bold uppercase tracking-wider bg-[#C85A32] text-white hover:bg-[#b54c26] shadow-xl shadow-rose-950/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               <Heart className="w-4 h-4 fill-white" />

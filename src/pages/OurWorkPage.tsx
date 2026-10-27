@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SectionHeading } from '../components/common/SectionHeading';
 import { BottomCTABand } from '../components/layout/BottomCTABand';
-import { PROGRAMS_DATA } from '../data/mockData';
+import { PROGRAMS_DATA, DONATION_PAYMENT_URL } from '../data/mockData';
 import { Program } from '../types';
 import { 
   Layers, 
@@ -208,7 +208,8 @@ export const OurWorkPage: React.FC<OurWorkPageProps> = ({
                           <ArrowRight className="w-3.5 h-3.5" />
                         </button>
                         <button
-                          onClick={onOpenDonate}
+                          // onClick={onOpenDonate}
+                          onClick={() => window.open(DONATION_PAYMENT_URL, "_blank", "noopener,noreferrer")}
                           className="py-2.5 px-3 rounded-xl border border-[#C85A32] text-[#C85A32] hover:bg-[#C85A32]/10 font-bold text-xs transition-colors flex items-center gap-1"
                           title="Sponsor this program"
                         >

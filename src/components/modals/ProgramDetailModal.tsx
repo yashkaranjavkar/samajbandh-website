@@ -2,6 +2,7 @@ import React from 'react';
 import { Program } from '../../types';
 import { Modal } from '../common/Modal';
 import { MapPin, Users, Target, Activity, FileText, CheckCircle2, Heart } from 'lucide-react';
+import { DONATION_PAYMENT_URL } from "../../data/mockData"
 
 interface ProgramDetailModalProps {
   program: Program | null;
@@ -164,7 +165,8 @@ export const ProgramDetailModal: React.FC<ProgramDetailModalProps> = ({
             <button
               onClick={() => {
                 onClose();
-                onOpenDonate();
+                // onOpenDonate();
+                window.open(DONATION_PAYMENT_URL, "_blank", "noopener,noreferrer");
               }}
               className="flex-1 py-3 px-4 rounded-xl bg-[#C85A32] text-white font-bold text-xs sm:text-sm hover:bg-[#B84A28] transition-colors flex items-center justify-center gap-2 shadow-md"
             >

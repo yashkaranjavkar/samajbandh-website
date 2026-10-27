@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { isSectionVisible } from '../../config/siteLayout';
 import { getSavedLanguage, switchLanguage } from '../../services/language';
+import {DONATION_PAYMENT_URL} from "../../data/mockData";
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Menu, 
@@ -140,12 +141,12 @@ export const Header: React.FC<HeaderProps> = ({
           desc: 'Flexible field drives, 1-week sprints & academic credit internships',
           icon: 'HeartHandshake'
         },
-        { 
-          name: 'Tax-Exempt 80G Giving', 
-          path: '/get-involved#donate', 
-          desc: 'Direct tax-exempt contribution to menstrual dignity',
-          icon: 'Heart'
-        }
+        // { 
+        //   name: 'Tax-Exempt 80G Giving', 
+        //   path: '/get-involved#donate', 
+        //   desc: 'Direct tax-exempt contribution to menstrual dignity',
+        //   icon: 'Heart'
+        // }
       ]
     }
   ];
@@ -254,13 +255,13 @@ export const Header: React.FC<HeaderProps> = ({
                             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                               {link.tagline}
                             </span>
-                            <Link 
+                            {/* <Link 
                               to={link.path} 
                               className="text-[10px] font-bold text-[#C85A32] hover:underline flex items-center gap-0.5"
                             >
                               <span>Explore All</span>
                               <ArrowRight className="w-2.5 h-2.5" />
-                            </Link>
+                            </Link> */}
                           </div>
 
                           {/* Sublinks with Icons & Descriptions */}
@@ -321,14 +322,14 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               {/* Shop CTA */}
-              <Link
+              {/* <Link
                 id="header-shop-btn"
                 to="/products-services"
                 className="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-xl text-slate-700 bg-slate-100 hover:bg-slate-200/80 transition-all border border-slate-200"
               >
                 <ShoppingBag className="w-3.5 h-3.5 text-slate-600" />
                 <span>Shop Pads</span>
-              </Link>
+              </Link> */}
 
               {/* Volunteer CTA */}
               <Link
@@ -343,7 +344,8 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Primary Donate CTA */}
               <button
                 id="header-donate-btn"
-                onClick={onOpenDonate}
+                // onClick={onOpenDonate}
+                onClick={() => window.open(DONATION_PAYMENT_URL, "_blank", "noopener,noreferrer")}
                 className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#C85A32] text-white hover:bg-[#b54c26] shadow-md shadow-rose-900/10 hover:shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 focus:outline-hidden"
               >
                 <Heart className="w-3.5 h-3.5 fill-white" />
@@ -443,7 +445,8 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
-                    onOpenDonate();
+                    // onOpenDonate();
+                    window.open(DONATION_PAYMENT_URL, "_blank", "noopener,noreferrer");
                   }}
                   className="w-full py-3.5 rounded-2xl bg-[#C85A32] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-rose-950/20"
                 >

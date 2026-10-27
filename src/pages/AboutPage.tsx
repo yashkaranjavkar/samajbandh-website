@@ -5,7 +5,7 @@ import { Timeline } from '../components/interactive/Timeline';
 import { Organogram } from '../components/interactive/Organogram';
 import { BottomCTABand } from '../components/layout/BottomCTABand';
 import { CountUpNumber } from '../components/common/CountUpNumber';
-import { AWARDS_DATA, TEAM_INFO } from '../data/mockData';
+import { AWARDS_DATA, TEAM_INFO, DONATION_PAYMENT_URL }from '../data/mockData';
 import { 
   Heart, 
   ShieldCheck, 
@@ -256,7 +256,8 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onOpenDonate }) => {
                   </div>
 
                   <button
-                    onClick={onOpenDonate}
+                    // onClick={onOpenDonate}
+                    onClick={() => window.open(DONATION_PAYMENT_URL, "_blank", "noopener,noreferrer")}
                     className="px-6 py-3.5 bg-slate-900 text-white rounded-2xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-colors shrink-0 shadow-md flex items-center gap-2"
                   >
                     <Heart className="w-4 h-4 fill-white" />

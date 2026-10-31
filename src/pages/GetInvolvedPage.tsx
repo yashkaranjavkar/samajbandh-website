@@ -127,6 +127,7 @@ export const GetInvolvedPage: React.FC<GetInvolvedPageProps> = ({ onOpenDonate }
     }
   }, [tabParam, roleParam, durationParam]);
 
+
   // ---------- Inline validation ----------
   const errors: Record<string, string> = {};
   if (name.trim().split(/\s+/).filter(Boolean).length < 2) errors.name = 'Enter your first and last name, separated by a space.';
@@ -332,8 +333,13 @@ export const GetInvolvedPage: React.FC<GetInvolvedPageProps> = ({ onOpenDonate }
                   { id: 'donate-cloth', label: 'Donate Clean Cotton Cloth', icon: <PackageCheck className="w-4 h-4" /> },
                   { id: 'csr', label: 'CSR & Institutional Alliances', icon: <Building className="w-4 h-4" /> }
                 ].map((tab) => (
-                  <button
-                    key={tab.id}
+                  <React.Fragment key={tab.id}>
+                    {tab.id === 'donate-cloth' && (
+                      <div className="basis-full h-0" />
+                    )}
+
+                    <button
+                      key={tab.id}
                     onClick={() => handleSelectTab(tab.id as any)}
                     className={`px-4 sm:px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
                       activeTab === tab.id
@@ -350,7 +356,8 @@ export const GetInvolvedPage: React.FC<GetInvolvedPageProps> = ({ onOpenDonate }
                         {tab.badge}
                       </span>
                     )}
-                  </button>
+                    </button>
+                  </React.Fragment>
                 ))}
               </div>
 
@@ -736,6 +743,7 @@ export const GetInvolvedPage: React.FC<GetInvolvedPageProps> = ({ onOpenDonate }
                       </div>
                       <p>1. We will send an application confirmation to <strong>{email}</strong> when email delivery is configured.</p>
                       <p>2. Our volunteer & internship coordinator will connect with you via WhatsApp ({phone}) within 2 business days.</p>
+                      <p>3. In Case of any change/corrections required in details, Please reach out to us on +91-9876543210</p>
                     </div>
                     <button
                       onClick={() => {

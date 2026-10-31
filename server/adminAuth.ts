@@ -6,7 +6,7 @@ const SESSION_TTL_SECONDS = 8 * 60 * 60;
 
 function sign(value: string): string {
   const secret = process.env.ADMIN_SESSION_SECRET;
-  console.log(secret)
+  // console.log(secret)
   if (!secret || secret.length < 32) throw new Error('ADMIN_SESSION_SECRET must be set to a random value of at least 32 characters.');
   return createHmac('sha256', secret).update(value).digest('hex');
 }

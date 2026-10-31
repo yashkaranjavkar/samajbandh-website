@@ -317,6 +317,7 @@ class DatabaseService {
 
   // --- VOLUNTEER & INTERN OPERATIONS ---
   public getVolunteers(filter?: { roleType?: string; status?: string; search?: string }): VolunteerRecord[] {
+    // console.log("In DB")
     let list = [...this.data.volunteers];
     if (filter?.roleType && filter.roleType !== 'all') {
       list = list.filter(v => v.roleType === filter.roleType);

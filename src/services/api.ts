@@ -450,6 +450,20 @@ export const ApiService = {
     return [];
   },
 
+  async updateBulkOrderStatus(id: string, status: string) {
+    const res = await fetch(`${API_BASE}/bulk-orders/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to update bulk order status');
+    }
+
+    return await res.json();
+  },
+
   async saveMediaAsset(asset: any) {
     try {
       const res = await fetch(`${API_BASE}/media`, {

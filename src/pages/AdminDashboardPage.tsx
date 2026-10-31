@@ -56,10 +56,9 @@ export const AdminDashboardPage: React.FC = () => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [st, vols, dons, cnts, ords, mAssets] = await Promise.all([
+      const [st, vols, cnts, ords, mAssets] = await Promise.all([
         ApiService.getOverviewStats(),
         ApiService.getVolunteers({ roleType: roleFilter, status: statusFilter, search: searchQuery }),
-        ApiService.getDonations(),
         ApiService.getContacts(),
         ApiService.getBulkOrders(),
         ApiService.getMediaAssets()
@@ -67,7 +66,6 @@ export const AdminDashboardPage: React.FC = () => {
 
       setStats(st);
       setVolunteers(vols);
-      setDonations(dons);
       setContacts(cnts);
       setBulkOrders(ords);
       setMediaAssets(mAssets);
@@ -130,6 +128,26 @@ export const AdminDashboardPage: React.FC = () => {
     fetchAllData();
   };
 
+  const handleBulkOrderStatusChange = async (
+    id: string,
+    status: string
+  ) => {
+    try {
+      await ApiService.updateBulkOrderStatus(id, status);
+
+      setBulkOrders(prev =>
+        prev.map(order =>
+          order.id === id ? { ...order, status } : order
+        )
+      );
+
+      alert('Bulk order status updated successfully!');
+    } catch (error) {
+      console.error('Bulk order update failed:', error);
+      alert('Unable to update bulk order status.');
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Sections are listed, ordered and switched on/off in src/config/siteLayout.ts */}
@@ -148,7 +166,7 @@ export const AdminDashboardPage: React.FC = () => {
                   Grassroots Operations & Content Manager
                 </h1>
                 <p className="text-xs sm:text-sm text-emerald-100/80">
-                  Easily manage volunteer applications, 80G tax donations, pad inventory inquiries, and site images/documents.
+                  Easily manage volunteer applications, pad inventory inquiries, and site images/documents.
                 </p>
               </div>
 
@@ -202,10 +220,10 @@ export const AdminDashboardPage: React.FC = () => {
                   <span className="text-2xl font-serif-heading font-bold text-[#C85A32]">{stats.activeInterns || 0}</span>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-white border border-[#E5DFC5] shadow-xs">
+                {/* <div className="p-4 rounded-2xl bg-white border border-[#E5DFC5] shadow-xs">
                   <span className="text-[11px] font-bold text-[#5C6760] uppercase block">Total Donations</span>
                   <span className="text-2xl font-serif-heading font-bold text-emerald-700">₹{(stats.totalDonated || 0).toLocaleString()}</span>
-                </div>
+                </div> */}
 
                 <div className="p-4 rounded-2xl bg-white border border-[#E5DFC5] shadow-xs">
                   <span className="text-[11px] font-bold text-[#5C6760] uppercase block">New Inquiries</span>
@@ -224,10 +242,10 @@ export const AdminDashboardPage: React.FC = () => {
             <div className="flex flex-wrap gap-2 border-b border-[#E5DFC5] pb-3">
               {[
                 { id: 'volunteers', label: 'Volunteers & Interns Database', icon: <Users className="w-4 h-4" />, count: volunteers.length },
-                { id: 'donations', label: 'Donations & 80G Receipts', icon: <Heart className="w-4 h-4" />, count: donations.length },
+                // { id: 'donations', label: 'Donations & 80G Receipts', icon: <Heart className="w-4 h-4" />, count: donations.length },
                 { id: 'contacts', label: 'Inquiries & Bulk Orders', icon: <FileText className="w-4 h-4" />, count: contacts.length + bulkOrders.length },
                 { id: 'media', label: 'Images & Documents Manager', icon: <ImageIcon className="w-4 h-4" /> },
-                { id: 'database', label: 'Database & System Files', icon: <Database className="w-4 h-4" /> }
+                // { id: 'database', label: 'Database & System Files', icon: <Database className="w-4 h-4" /> }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -516,63 +534,63 @@ export const AdminDashboardPage: React.FC = () => {
             ),
 
           // TAB 2: DONATIONS & 80G RECEIPTS
-          donationsTab:
-            activeTab === 'donations' && (
-              <div className="bg-white rounded-3xl border border-[#E5DFC5] shadow-sm overflow-hidden space-y-4 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold font-serif-heading text-[#143D2B]">80G Tax Deductible Donations Log</h3>
-                    <p className="text-xs text-[#5C6760]">All contributions are eligible for 50% deduction under Section 80G of the Income Tax Act.</p>
-                  </div>
-                </div>
+          // donationsTab:
+          //   activeTab === 'donations' && (
+          //     <div className="bg-white rounded-3xl border border-[#E5DFC5] shadow-sm overflow-hidden space-y-4 p-6">
+          //       <div className="flex items-center justify-between">
+          //         <div>
+          //           <h3 className="text-xl font-bold font-serif-heading text-[#143D2B]">80G Tax Deductible Donations Log</h3>
+          //           <p className="text-xs text-[#5C6760]">All contributions are eligible for 50% deduction under Section 80G of the Income Tax Act.</p>
+          //         </div>
+          //       </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead>
-                      <tr className="bg-[#FBF9F5] border-b border-[#E5DFC5] text-[#5C6760] font-bold uppercase">
-                        <th className="py-3 px-4">Donor Name</th>
-                        <th className="py-3 px-4">Amount</th>
-                        <th className="py-3 px-4">Receipt #</th>
-                        <th className="py-3 px-4">PAN Number</th>
-                        <th className="py-3 px-4">Purpose</th>
-                        <th className="py-3 px-4">Date</th>
-                        <th className="py-3 px-4">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#E5DFC5]">
-                      {donations.map((d) => (
-                        <tr key={d.id} className="hover:bg-slate-50">
-                          <td className="py-3 px-4">
-                            <div className="font-bold text-[#1F2421]">{d.fullName}</div>
-                            <div className="text-[11px] text-slate-500">{d.email} • {d.phone}</div>
-                          </td>
-                          <td className="py-3 px-4 font-bold text-emerald-800 text-sm">
-                            ₹{d.amount.toLocaleString()}
-                          </td>
-                          <td className="py-3 px-4 font-mono text-[11px] text-slate-700">
-                            {d.receiptNumber}
-                          </td>
-                          <td className="py-3 px-4 font-mono text-[11px] uppercase">
-                            {d.panNumber || 'Not provided'}
-                          </td>
-                          <td className="py-3 px-4 text-[#5C6760] max-w-xs truncate">
-                            {d.purpose || 'Menstrual Dignity'}
-                          </td>
-                          <td className="py-3 px-4 text-slate-500">
-                            {new Date(d.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="px-2 py-0.5 rounded-md font-bold text-[10px] bg-emerald-100 text-emerald-800 uppercase">
-                              {d.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ),
+          //       <div className="overflow-x-auto">
+          //         <table className="w-full text-left border-collapse text-xs">
+          //           <thead>
+          //             <tr className="bg-[#FBF9F5] border-b border-[#E5DFC5] text-[#5C6760] font-bold uppercase">
+          //               <th className="py-3 px-4">Donor Name</th>
+          //               <th className="py-3 px-4">Amount</th>
+          //               <th className="py-3 px-4">Receipt #</th>
+          //               <th className="py-3 px-4">PAN Number</th>
+          //               <th className="py-3 px-4">Purpose</th>
+          //               <th className="py-3 px-4">Date</th>
+          //               <th className="py-3 px-4">Status</th>
+          //             </tr>
+          //           </thead>
+          //           <tbody className="divide-y divide-[#E5DFC5]">
+          //             {donations.map((d) => (
+          //               <tr key={d.id} className="hover:bg-slate-50">
+          //                 <td className="py-3 px-4">
+          //                   <div className="font-bold text-[#1F2421]">{d.fullName}</div>
+          //                   <div className="text-[11px] text-slate-500">{d.email} • {d.phone}</div>
+          //                 </td>
+          //                 <td className="py-3 px-4 font-bold text-emerald-800 text-sm">
+          //                   ₹{d.amount.toLocaleString()}
+          //                 </td>
+          //                 <td className="py-3 px-4 font-mono text-[11px] text-slate-700">
+          //                   {d.receiptNumber}
+          //                 </td>
+          //                 <td className="py-3 px-4 font-mono text-[11px] uppercase">
+          //                   {d.panNumber || 'Not provided'}
+          //                 </td>
+          //                 <td className="py-3 px-4 text-[#5C6760] max-w-xs truncate">
+          //                   {d.purpose || 'Menstrual Dignity'}
+          //                 </td>
+          //                 <td className="py-3 px-4 text-slate-500">
+          //                   {new Date(d.createdAt).toLocaleDateString()}
+          //                 </td>
+          //                 <td className="py-3 px-4">
+          //                   <span className="px-2 py-0.5 rounded-md font-bold text-[10px] bg-emerald-100 text-emerald-800 uppercase">
+          //                     {d.status}
+          //                   </span>
+          //                 </td>
+          //               </tr>
+          //             ))}
+          //           </tbody>
+          //         </table>
+          //       </div>
+          //     </div>
+          //   ),
 
           // TAB 3: CONTACTS & BULK ORDERS
           contactsTab:
@@ -614,7 +632,20 @@ export const AdminDashboardPage: React.FC = () => {
                       <div key={o.id} className="p-4 rounded-2xl bg-white border border-indigo-100 shadow-xs space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-sm text-indigo-950">{o.product} — {o.quantity} Units</span>
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-indigo-50 text-indigo-800">{o.status}</span>
+                          {/* <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-indigo-50 text-indigo-800">{o.status}</span> */}
+                          <select
+                            value={o.status || 'inquiry'}
+                            onChange={(e) =>
+                              handleBulkOrderStatusChange(o.id, e.target.value)
+                            }
+                            className="px-2 py-1 rounded-md text-xs font-bold uppercase bg-indigo-50 text-indigo-800 border border-indigo-200"
+                          >
+                            <option value="inquiry">Inquiry</option>
+                            <option value="quoted">Quoted</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="dispatched">Dispatched</option>
+                            <option value="fulfilled">Fulfilled</option>
+                          </select>
                         </div>
                         <div className="text-xs text-slate-600">
                           <strong>Organization:</strong> {o.organization} • <strong>Contact:</strong> {o.name} ({o.phone}, {o.email})

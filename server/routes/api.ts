@@ -1,6 +1,17 @@
 import express, { Request, Response } from 'express';
 import { db } from '../db/database.js';
-import { persistBulkOrdersToPostgres, persistVolunteerToPostgres } from '../db/postgres.js';
+import {
+  persistBulkOrdersToPostgres,
+  persistVolunteerToPostgres,
+  pgPool,
+  getVolunteersFromPostgres,
+  updateVolunteerInPostgres,
+  deleteVolunteerFromPostgres,
+  getVolunteerOverviewStatsFromPostgres,
+  getBulkOrdersFromPostgres,
+  updateBulkOrderStatusInPostgres
+  
+} from '../db/postgres.js';
 import { sendVolunteerApplicationEmails } from '../email.js';
 import { clearAdminCookie, createAdminSession, requireAdmin, setAdminCookie, verifyAdminCredentials } from '../adminAuth.js';
 
@@ -27,7 +38,7 @@ apiRouter.post('/admin/login', (req: Request, res: Response) => {
     return res.json({ success: true, message: 'Signed in successfully.' });
   } catch (error: any) {
     console.error('[Admin auth] Configuration error:', error.message);
-    return res.status(503).json({ success: false, message: 'Admin login is not configured on this server.' });
+    return res.status(503).json({ success: false, message: 'Admin login is not configured on this server.'});
   }
 });
 
@@ -54,23 +65,33 @@ apiRouter.use((req: Request, res: Response, next) => {
 });
 
 // 2. Overview Stats (Dashboard)
-apiRouter.get('/stats/overview', (_req: Request, res: Response) => {
+apiRouter.get('/stats/overview', async(_req: Request, res: Response) => {
   try {
     const stats = db.getOverviewStats();
+
+    if (pgPool){
+      const volunteerStats = await getVolunteerOverviewStatsFromPostgres();
+      Object.assign(stats,volunteerStats);
+    }
+
     res.json({ success: true, data: stats });
   } catch (error: any) {
+    console.error('[Admin stats] Failed to load overview stats:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 // 3. Volunteer & Internship API
-apiRouter.get('/volunteers', (req: Request, res: Response) => {
+apiRouter.get('/volunteers', async(req: Request, res: Response) => {
   try {
     const roleType = req.query.roleType as string | undefined;
     const status = req.query.status as string | undefined;
     const search = req.query.search as string | undefined;
-
-    const list = db.getVolunteers({ roleType, status, search });
+    
+    // PostgreSQL is the source of truth when configured; otherwise use the JSON store.
+    const list = pgPool
+      ? await getVolunteersFromPostgres({ roleType, status, search })
+      : db.getVolunteers({ roleType, status, search });
     res.json({ success: true, count: list.length, data: list });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -181,40 +202,59 @@ apiRouter.post('/volunteer', (req: Request, res: Response) => {
 });
 
 // Update Volunteer Status / Admin Notes
-apiRouter.patch('/volunteers/:id', (req: Request, res: Response) => {
+apiRouter.patch('/volunteers/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { status, adminNotes, roleType, duration, mode } = req.body;
-    const updated = db.updateVolunteer(id, { status, adminNotes, roleType, duration, mode });
+    const { status, adminNotes, roleType, duration, mode } = req.body ?? {};
+    const updates = Object.fromEntries(
+      Object.entries({ status, adminNotes, roleType, duration, mode })
+        .filter(([, value]) => value !== undefined)
+    );
+
+    // When PostgreSQL is configured, write there first so the admin sees the persisted record.
+    // JSON remains the fallback only when DATABASE_URL / pgPool is not configured.
+    const updated = pgPool
+      ? await updateVolunteerInPostgres(id, updates)
+      : db.updateVolunteer(id, updates);
 
     if (!updated) {
       return res.status(404).json({ success: false, message: 'Volunteer record not found' });
     }
 
-    res.json({ success: true, message: 'Record updated successfully', data: updated });
+    // Keep the JSON copy in sync when it already contains this record, without relying on it
+    // as the source of truth when PostgreSQL is enabled.
+    if (pgPool) db.updateVolunteer(id, updates);
+
+    return res.json({ success: true, message: 'Record updated successfully', data: updated });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error('[Volunteers] Could not update record:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update volunteer record.' });
   }
 });
 
 // Delete Volunteer Record
-apiRouter.delete('/volunteers/:id', (req: Request, res: Response) => {
+apiRouter.delete('/volunteers/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const success = db.deleteVolunteer(id);
+    const success = pgPool
+      ? await deleteVolunteerFromPostgres(id)
+      : db.deleteVolunteer(id);
+
     if (!success) {
       return res.status(404).json({ success: false, message: 'Record not found' });
     }
-    res.json({ success: true, message: 'Volunteer deleted successfully' });
+    if (pgPool) db.deleteVolunteer(id);
+    return res.json({ success: true, message: 'Volunteer deleted successfully' });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error('[Volunteers] Could not delete record:', error);
+    return res.status(500).json({ success: false, message: 'Failed to delete volunteer record.' });
   }
 });
 
 // Export Volunteers to CSV for Non-Technical Admin
-apiRouter.get('/volunteers/export', (_req: Request, res: Response) => {
+apiRouter.get('/volunteers/export', async (_req: Request, res: Response) => {
   try {
-    const list = db.getVolunteers();
+    const list = pgPool ? await getVolunteersFromPostgres() : db.getVolunteers();
     const headers = [
       'ID',
       'Name',
@@ -342,12 +382,82 @@ apiRouter.post(['/contacts', '/contact'], (req: Request, res: Response) => {
 });
 
 // 6. Bulk Pad Orders API
-apiRouter.get('/get-bulk-orders', (_req: Request, res: Response) => {
+// apiRouter.get('/get-bulk-orders', async(_req: Request, res: Response) => {
+//   try {
+//     const orders = db.getBulkOrders();
+//     res.json({ success: true, count: orders.length, data: orders });
+//   } catch (error: any) {
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
+
+apiRouter.get(['/bulk-orders', '/get-bulk-orders'], async (_req, res) => {
   try {
-    const orders = db.getBulkOrders();
-    res.json({ success: true, count: orders.length, data: orders });
+    const orders = pgPool
+      ? await getBulkOrdersFromPostgres()
+      : db.getBulkOrders();
+
+    return res.json({
+      success: true,
+      count: orders.length,
+      data: orders
+    });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error('[Bulk Orders] Failed to fetch:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch bulk orders'
+    });
+  }
+});
+
+apiRouter.patch('/bulk-orders/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const allowedStatuses = [
+      'inquiry',
+      'quoted',
+      'confirmed',
+      'dispatched',
+      'fulfilled'
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid bulk order status'
+      });
+    }
+
+    const updated = pgPool
+      ? await updateBulkOrderStatusInPostgres(id, status)
+      : db.updateBulkOrderStatus(id, status);
+
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: 'Bulk order not found'
+      });
+    }
+
+    // Keep JSON synchronized when PostgreSQL is the primary store.
+    if (pgPool) {
+      db.updateBulkOrderStatus(id, status);
+    }
+
+    return res.json({
+      success: true,
+      message: 'Bulk order status updated successfully',
+      data: updated
+    });
+  } catch (error: any) {
+    console.error('[Bulk Orders] Status update failed:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to update bulk order status'
+    });
   }
 });
 

@@ -1,7 +1,4 @@
 # Samajbandh Media & Document Guide (For Non-Technical Administrators)
-
-This guide explains how any team member can easily update photos, logos, banners, and PDF documents on the Samajbandh website without needing coding knowledge.
-
 ---
 
 ## 📁 1. Where Files Are Stored
@@ -9,21 +6,28 @@ This guide explains how any team member can easily update photos, logos, banners
 All images and downloadable PDF documents are stored in the `/public` folder:
 
 ```
-public/
-├── images/
-│   ├── hero/            # Homepage hero banners and top sliders
-│   ├── programs/        # Photos for Asha Pad micro-units, school workshops, Gaokor shed reforms
-│   ├── products/        # Asha reusable cloth pads, kits, travel pouches, packaging
-│   ├── team/            # Photos of founder Sachin Asha Subhash, trustees, coordinators
-│   ├── gallery/         # Field photos from Pune, Junnar, Gadchiroli, Nashik
-│   ├── partners/        # Logos of NGOs, CSR partners, institutions
-│   └── awards/          # Trophy, felicitation and recognition photos
-└── docs/
-    ├── transparency/    # Annual reports, 80G certificate, 12A certificate, CSR-1 registration
-    ├── guidelines/      # Pad washing instructions, MHM training manuals, ToT guides
-    └── volunteer/       # Volunteer code of conduct, internship logbook formats
+Samajbandh/
+├── assets/
+│   ├── Media/
+│   │     ├── Samajbandh Material for Website  # All Provided Data required for website creation
+├── public/
+│   ├── content/
+│   │    ├──media-config.json
+│   ├── images/
+│   │    ├──asha-kendra/
+│   │    ├──awareness/
+│   │    ├──brand/
+│   │    ├──campaigns/
+│   │    ├──fellowship/
+│   │    ├──kurma/
+│   │    ├──products/
+│   │    ├──partners/
+│   │    ├──samata-yatra/
+│   │    ├──sdg/
+│   │    ├──stories/
+│   │    ├──sdg/
+│   │    └── team/ 
 ```
-
 ---
 
 ## 🖼️ 2. How to Replace an Image

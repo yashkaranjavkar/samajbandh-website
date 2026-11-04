@@ -77,6 +77,8 @@ export const GetInvolvedPage: React.FC<GetInvolvedPageProps> = ({ onOpenDonate }
   const [stateList, setStateList] = useState<GeoItem[]>([]);
   const [cityList, setCityList] = useState<GeoItem[]>([]);
 
+  const [emailSent, setEmailSent] = useState(false);
+
   useEffect(() => {
     GetCountries().then((r: any) => setCountryList(r || [])).catch(() => setCountryList([]));
   }, []);
@@ -238,6 +240,7 @@ export const GetInvolvedPage: React.FC<GetInvolvedPageProps> = ({ onOpenDonate }
       });
       
       setSuccessMessage(response?.message || 'Your application has been received.');
+      setEmailSent(response?.emailSent === true);
     } catch {
       setStatus('error');
     }
@@ -741,7 +744,19 @@ export const GetInvolvedPage: React.FC<GetInvolvedPageProps> = ({ onOpenDonate }
                         <Check className="w-4 h-4 text-emerald-600" />
                         <span>Next Steps:</span>
                       </div>
-                      <p>1. We will send an application confirmation to <strong>{email}</strong> when email delivery is configured.</p>
+                      {/* <p>1. We will send an application confirmation to <strong>{email}</strong> when email delivery is configured.</p> */}
+                      <p>
+                        {emailSent? (
+                          <>
+                            1. Please check your email at <strong>{email}</strong> for the application confirmation. Also check your spam folder.
+                          </>
+                        ) : (
+                          <>
+                            1. Your application has been received. Email confirmation is currently
+                            unavailable.
+                          </>
+                        )}
+                      </p>
                       <p>2. Our volunteer & internship coordinator will connect with you via WhatsApp ({phone}) within 2 business days.</p>
                       <p>3. In Case of any change/corrections required in details, Please reach out to us on +91-9876543210</p>
                     </div>
@@ -1073,7 +1088,7 @@ export const GetInvolvedPage: React.FC<GetInvolvedPageProps> = ({ onOpenDonate }
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             onBlur={() => touch('email')}
-                            placeholder="snehal@example.com"
+                            placeholder="snehal@email.com"
                             className={inputCls('email')}
                           />
                           <FieldError field="email" />
@@ -1085,7 +1100,7 @@ export const GetInvolvedPage: React.FC<GetInvolvedPageProps> = ({ onOpenDonate }
                             <select aria-label="Country calling code" value={countryCode} onChange={e => setCountryCode(e.target.value)} className={inputCls('phone')}>
                               <option value="+91">🇮🇳 +91</option><option value="+1">🇺🇸 +1</option><option value="+44">🇬🇧 +44</option><option value="+61">🇦🇺 +61</option><option value="+971">🇦🇪 +971</option><option value="+65">🇸🇬 +65</option><option value="+977">🇳🇵 +977</option><option value="+94">🇱🇰 +94</option><option value="+880">🇧🇩 +880</option><option value="+27">🇿🇦 +27</option>
                             </select>
-                            <input type="tel" id="field-phone" value={phone} onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))} onBlur={() => touch('phone')} placeholder="98765 43210" className={inputCls('phone')} inputMode="numeric" />
+                            <input type="tel" id="field-phone" value={phone} onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))} onBlur={() => touch('phone')} placeholder="9876543210" className={inputCls('phone')} inputMode="numeric" />
                           </div>
                           <FieldError field="phone" />
                         </div>

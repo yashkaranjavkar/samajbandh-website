@@ -20,6 +20,7 @@ import { ContactPage } from './pages/ContactPage';
 import { TransparencyPage } from './pages/TransparencyPage';
 import { PoliciesPage } from './pages/PoliciesPage';
 import { AdminAccessGate } from './pages/AdminAccessGate';
+import { FaqPage } from './pages/FaqPage';
 
 // Modals
 import { DonateModal } from './components/modals/DonateModal';
@@ -33,10 +34,22 @@ import { isSectionVisible } from './config/siteLayout';
 
 // Scroll to top on route navigation
 const ScrollToTop = () => {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
   useEffect(() => {
+    // A link like /#upcoming-events should land on that section, not at the top of the page.
+    if (hash) {
+      let tries = 0;
+      const timer = window.setInterval(() => {
+        const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+        if (target || ++tries > 20) {
+          window.clearInterval(timer);
+          target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 50);
+      return () => window.clearInterval(timer);
+    }
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-  }, [pathname]);
+  }, [pathname, hash]);
   return null;
 };
 
@@ -140,6 +153,10 @@ export default function App() {
               path="/contact" 
               element={<ContactPage onOpenDonate={() => setIsDonateOpen(true)} />} 
             />
+            <Route
+              path="/faqs"
+              element={<FaqPage onOpenDonate={() => setIsDonateOpen(true)} />}
+            />
             <Route 
               path="/admin" 
               element={<AdminAccessGate />} 
@@ -178,7 +195,9 @@ export default function App() {
         </main>
 
         {/* Global Footer (toggle in src/config/siteLayout.ts) */}
-        {isSectionVisible('global', 'footer') && <Footer onOpenDonate={() => setIsDonateOpen(true)} />}
+        {/* {isSectionVisible('global', 'footer') && <Footer onOpenDonate={() => setIsDonateOpen(true)} />} */}
+        {isSectionVisible('global', 'footer') && <Footer/>}
+
 
         {/* Global Modals */}
         <DonateModal 

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { randomBytes } from 'crypto';
 
 export interface VolunteerRecord {
   id: string;
@@ -77,7 +78,64 @@ export interface EventRegistrationRecord {
   phone: string;
   organization?: string;
   notes?: string;
+  status: 'registered' | 'attended' | 'absent' | 'cancelled';
   createdAt: string;
+}
+
+export type EventType = 'Workshop' | 'Fellowship Camp' | 'Webinar' | 'Awareness Drive' | 'Fundraiser';
+
+export interface EventRecord {
+  id: string;
+  title: string;
+  type: EventType;
+  /** Display label shown on the website, e.g. "April 22, 2026" */
+  date: string;
+  /** ISO date (YYYY-MM-DD) used for sorting */
+  eventDate?: string;
+  time: string;
+  location: string;
+  isVirtual: boolean;
+  registrationOpen: boolean;
+  totalSeats: number;
+  eligibility: string;
+  description: string;
+  image: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NewsletterSubscriberRecord {
+  id: string;
+  email: string;
+  status: 'active' | 'unsubscribed';
+  unsubscribeToken: string;
+  subscribedAt: string;
+  unsubscribedAt?: string | null;
+}
+
+export type NewsletterCampaignStatus =
+  'draft' | 'scheduled' | 'processing' | 'sent' | 'partially_sent' | 'failed' | 'cancelled';
+
+export interface NewsletterAttachment {
+  storedName: string;
+  filename: string;
+  size: number;
+  mimeType: string;
+}
+
+export interface NewsletterCampaignRecord {
+  id: string;
+  subject: string;
+  content: string;
+  attachments: NewsletterAttachment[];
+  status: NewsletterCampaignStatus;
+  scheduledAt: string | null;
+  recipientCount: number;
+  sentCount: number;
+  failedCount: number;
+  createdAt: string;
+  updatedAt: string;
+  sentAt?: string | null;
 }
 
 export interface MediaAssetRecord {
@@ -98,7 +156,9 @@ interface DatabaseSchema {
   contacts: ContactRecord[];
   bulkOrders: BulkOrderRecord[];
   eventRegistrations: EventRegistrationRecord[];
-  newsletter: { id: string; email: string; subscribedAt: string }[];
+  newsletter: NewsletterSubscriberRecord[];
+  newsletterCampaigns: NewsletterCampaignRecord[];
+  events: EventRecord[];
   mediaAssets: MediaAssetRecord[];
   settings: Record<string, any>;
 }
@@ -231,9 +291,11 @@ const INITIAL_DB: DatabaseSchema = {
   ],
   eventRegistrations: [],
   newsletter: [
-    { id: 'nl-1', email: 'supporter1@gmail.com', subscribedAt: new Date().toISOString() },
-    { id: 'nl-2', email: 'advocate.pune@yahoo.com', subscribedAt: new Date().toISOString() }
+    { id: 'nl-1', email: 'supporter1@gmail.com', status: 'active', unsubscribeToken: randomBytes(24).toString('hex'), subscribedAt: new Date().toISOString() },
+    { id: 'nl-2', email: 'advocate.pune@yahoo.com', status: 'active', unsubscribeToken: randomBytes(24).toString('hex'), subscribedAt: new Date().toISOString() }
   ],
+  newsletterCampaigns: [],
+  events: [],
   mediaAssets: [
     {
       id: 'media-hero-1',
@@ -271,6 +333,8 @@ const EMPTY_DB: DatabaseSchema = {
   bulkOrders: [],
   eventRegistrations: [],
   newsletter: [],
+  newsletterCampaigns: [],
+  events: [],
   mediaAssets: [],
   settings: {}
 };
@@ -297,7 +361,14 @@ class DatabaseService {
       if (fs.existsSync(this.dbPath)) {
         const raw = fs.readFileSync(this.dbPath, 'utf-8');
         // Merge over an empty schema so older db files missing newer collections still load
-        return { ...structuredClone(EMPTY_DB), ...JSON.parse(raw) };
+        const loaded: DatabaseSchema = { ...structuredClone(EMPTY_DB), ...JSON.parse(raw) };
+        // Older db files stored subscribers as {id,email,subscribedAt}; add the newer fields.
+        loaded.newsletter = loaded.newsletter.map(n => ({
+          ...n,
+          status: n.status || 'active',
+          unsubscribeToken: n.unsubscribeToken || randomBytes(24).toString('hex'),
+        }));
+        return loaded;
       }
     } catch (err) {
       console.warn('[DB] Could not read db file, loading initial memory store:', err);
@@ -451,15 +522,84 @@ class DatabaseService {
     return [...this.data.eventRegistrations].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
-  public addEventRegistration(record: Omit<EventRegistrationRecord, 'id' | 'createdAt'>): EventRegistrationRecord {
+  // public addEventRegistration(record: Omit<EventRegistrationRecord, 'id' | 'createdAt'>): EventRegistrationRecord {
+  //   const newRecord: EventRegistrationRecord = {
+  //     ...record,
+  //     id: `evt-${Date.now().toString().slice(-6)}`,
+  //     createdAt: new Date().toISOString()
+  //   };
+  //   this.data.eventRegistrations.unshift(newRecord);
+  //   this.saveData(this.data);
+  //   return newRecord;
+  // }
+
+  public addEventRegistration(
+    record: Omit<EventRegistrationRecord, 'id' | 'createdAt'> &
+      Partial<Pick<EventRegistrationRecord, 'id' | 'createdAt'>>
+  ): EventRegistrationRecord {
     const newRecord: EventRegistrationRecord = {
       ...record,
-      id: `evt-${Date.now().toString().slice(-6)}`,
-      createdAt: new Date().toISOString()
+      id: record.id || `evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      createdAt: record.createdAt || new Date().toISOString()
     };
-    this.data.eventRegistrations.unshift(newRecord);
+
+    const existingIndex = this.data.eventRegistrations.findIndex(
+      item => item.id === newRecord.id
+    );
+
+    if (existingIndex >= 0) {
+      this.data.eventRegistrations[existingIndex] = newRecord;
+    } else {
+      this.data.eventRegistrations.unshift(newRecord);
+    }
+
     this.saveData(this.data);
     return newRecord;
+  }
+
+  public updateEventRegistrationStatus(
+    id: string,
+    status: EventRegistrationRecord['status']
+  ): EventRegistrationRecord | null {
+    const item = this.data.eventRegistrations.find(r => r.id === id);
+    if (!item) return null;
+    item.status = status;
+    this.saveData(this.data);
+    return item;
+  }
+
+  // --- EVENT OPERATIONS ---
+  public getEvents(): EventRecord[] {
+    return [...this.data.events];
+  }
+
+  public upsertEvent(event: EventRecord): EventRecord {
+    const idx = this.data.events.findIndex(e => e.id === event.id);
+    if (idx >= 0) this.data.events[idx] = event;
+    else this.data.events.push(event);
+    this.saveData(this.data);
+    return event;
+  }
+
+  /** Removes the event and every registration made for it. */
+  public deleteEvent(id: string): { removed: boolean; registrations: number } {
+    const before = this.data.events.length;
+    this.data.events = this.data.events.filter(e => e.id !== id);
+    const regsBefore = this.data.eventRegistrations.length;
+    this.data.eventRegistrations = this.data.eventRegistrations.filter(r => r.eventId !== id);
+    const removed = this.data.events.length < before;
+    const registrations = regsBefore - this.data.eventRegistrations.length;
+    if (removed || registrations > 0) this.saveData(this.data);
+    return { removed, registrations };
+  }
+
+  public isEventsSeeded(): boolean {
+    return Boolean(this.data.settings.eventsSeeded);
+  }
+
+  public markEventsSeeded(): void {
+    this.data.settings.eventsSeeded = true;
+    this.saveData(this.data);
   }
 
   // --- MEDIA ASSETS OPERATIONS ---
@@ -479,17 +619,63 @@ class DatabaseService {
   }
 
   // --- NEWSLETTER OPERATIONS ---
-  public addNewsletter(email: string): boolean {
-    if (!this.data.newsletter.some(n => n.email.toLowerCase() === email.toLowerCase())) {
-      this.data.newsletter.push({
-        id: `nl-${Date.now().toString().slice(-6)}`,
-        email,
-        subscribedAt: new Date().toISOString()
-      });
+  public getNewsletterSubscribers(): NewsletterSubscriberRecord[] {
+    return [...this.data.newsletter];
+  }
+
+  /** Returns the stored subscriber and whether this call created or re-activated it. */
+  public addNewsletter(email: string): { record: NewsletterSubscriberRecord; changed: boolean } {
+    const normalized = email.trim().toLowerCase();
+    const existing = this.data.newsletter.find(n => n.email.toLowerCase() === normalized);
+    if (existing) {
+      if (existing.status === 'active') return { record: existing, changed: false };
+      existing.status = 'active';
+      existing.unsubscribedAt = null;
       this.saveData(this.data);
-      return true;
+      return { record: existing, changed: true };
     }
-    return false;
+    const record: NewsletterSubscriberRecord = {
+      id: `nl-${Date.now()}-${randomBytes(3).toString('hex')}`,
+      email: normalized,
+      status: 'active',
+      unsubscribeToken: randomBytes(24).toString('hex'),
+      subscribedAt: new Date().toISOString(),
+    };
+    this.data.newsletter.push(record);
+    this.saveData(this.data);
+    return { record, changed: true };
+  }
+
+  public upsertNewsletterSubscriber(record: NewsletterSubscriberRecord): void {
+    const idx = this.data.newsletter.findIndex(n => n.email.toLowerCase() === record.email.toLowerCase());
+    if (idx >= 0) this.data.newsletter[idx] = { ...this.data.newsletter[idx], ...record };
+    else this.data.newsletter.push(record);
+    this.saveData(this.data);
+  }
+
+  public unsubscribeNewsletter(token: string): boolean {
+    const item = this.data.newsletter.find(n => n.unsubscribeToken === token);
+    if (!item) return false;
+    if (item.status !== 'unsubscribed') {
+      item.status = 'unsubscribed';
+      item.unsubscribedAt = new Date().toISOString();
+      this.saveData(this.data);
+    }
+    return true;
+  }
+
+  public getNewsletterCampaigns(): NewsletterCampaignRecord[] {
+    return [...this.data.newsletterCampaigns].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  public saveNewsletterCampaign(record: NewsletterCampaignRecord): NewsletterCampaignRecord {
+    const idx = this.data.newsletterCampaigns.findIndex(c => c.id === record.id);
+    if (idx >= 0) this.data.newsletterCampaigns[idx] = record;
+    else this.data.newsletterCampaigns.push(record);
+    this.saveData(this.data);
+    return record;
   }
 
   // --- OVERVIEW STATS ---

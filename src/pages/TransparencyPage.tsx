@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {useSearchParams, useLocation } from 'react-router-dom';
 import { SectionHeading } from '../components/common/SectionHeading';
 import { BottomCTABand } from '../components/layout/BottomCTABand';
 import { 
@@ -17,80 +18,38 @@ import {
 } from 'lucide-react';
 import { PageSections } from '../components/layout/PageSections';
 
+import { 
+  DONATION_PAYMENT_URL, 
+  AUDIT_REPORTS, 
+  STATUTORY_CERTS,
+  GOVERNANCE_POLICIES,
+
+} from "../data/mockData"
+
 interface TransparencyPageProps {
   onOpenDonate: () => void;
 }
 
 export const TransparencyPage: React.FC<TransparencyPageProps> = ({ onOpenDonate }) => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<'financials' | 'certifications' | 'policies' | 'governance'>('financials');
 
-  const AUDIT_REPORTS = [
-    { year: 'FY 2024-25 (Provisional)', size: '2.4 MB', auditor: 'M/s Kulkarni & Associates, Pune', status: 'Audited & Filed', date: 'June 2025' },
-    { year: 'FY 2023-24', size: '3.1 MB', auditor: 'M/s Kulkarni & Associates, Pune', status: 'Audited & Filed', date: 'July 2024' },
-    { year: 'FY 2022-23', size: '2.8 MB', auditor: 'M/s Kulkarni & Associates, Pune', status: 'Audited & Filed', date: 'August 2023' },
-    { year: 'FY 2021-22', size: '1.9 MB', auditor: 'M/s Kulkarni & Associates, Pune', status: 'Audited & Filed', date: 'July 2022' }
-  ];
+  useEffect(() => {
+      const params = new URLSearchParams(location.search);
+      const tabParam = params.get('tab');
+      if (tabParam && ['financials', 'certifications', 'policies', 'governance'].includes(tabParam)) {
+        setActiveTab(tabParam as any);
+      }
+    }, [location.search]);
 
-  const STATUTORY_CERTS = [
-    {
-      title: 'Section 80G Tax Exemption Certificate',
-      regNo: 'AAATS9823RF20214',
-      validity: 'Perpetual (AY 2022-23 onwards)',
-      authority: 'Income Tax Department of India',
-      benefit: '50% tax deduction for Indian donors under Section 80G of the Income Tax Act.'
-    },
-    {
-      title: 'Section 12A Registration Certificate',
-      regNo: 'AAATS9823RE20201',
-      validity: 'Valid & Active',
-      authority: 'Commissioner of Income Tax (Exemptions), Pune',
-      benefit: 'Non-profit tax exemption recognition for charitable health and education trusts.'
-    },
-    {
-      title: 'CSR-1 Registration (Ministry of Corporate Affairs)',
-      regNo: 'CSR00049281',
-      validity: 'Permanent Registration',
-      authority: 'MCA, Government of India',
-      benefit: 'Authorized partner to receive Corporate Social Responsibility (CSR) funds.'
-    },
-    {
-      title: 'Maharashtra Public Charitable Trust Registration',
-      regNo: 'E-38291/Pune',
-      validity: 'Registered under Bombay Public Trusts Act, 1950',
-      authority: 'Charity Commissioner, Maharashtra',
-      benefit: 'Legal standing as an accredited public social service trust.'
-    },
-    {
-      title: 'NITI Aayog NGO Darpan Enrolment',
-      regNo: 'MH/2021/0293841',
-      validity: 'Verified & Active',
-      authority: 'NITI Aayog, Government of India',
-      benefit: 'Accredited for central and state public health partnerships.'
-    }
-  ];
-
-  const GOVERNANCE_POLICIES = [
-    {
-      title: 'Child Protection & Safeguarding Policy',
-      description: 'Zero tolerance for harassment or exploitation of adolescent girls in school and village workshop programs.',
-      updated: 'Updated March 2025'
-    },
-    {
-      title: 'POSH (Prevention of Sexual Harassment) Policy',
-      description: 'Strict workplace safety protocols and Internal Complaints Committee (ICC) adhering to statutory laws.',
-      updated: 'Updated January 2025'
-    },
-    {
-      title: 'Whistleblower & Anti-Corruption Framework',
-      description: 'Confidential reporting mechanisms for fraud, bribery, or ethics violations with direct trustee review.',
-      updated: 'Updated November 2024'
-    },
-    {
-      title: 'Gender Non-Discrimination & Inclusion Guidelines',
-      description: 'Affirmative hiring and supportive community guidelines respecting tribal customs and marginalized identities.',
-      updated: 'Updated February 2025'
-    }
-  ];
+  // const [searchParams] = useSearchParams();
+  // useEffect(() => {
+  //     const tab = searchParams.get('tab');
+  
+  //     if (tab && ['financials', 'certifications', 'policies', 'governance'].includes(tab)) {
+  //       setActiveTab(tab as any);
+  //     }
+  //   }, [searchParams]);
 
   return (
     <div className="space-y-16 sm:space-y-24 py-6 sm:py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -160,7 +119,7 @@ export const TransparencyPage: React.FC<TransparencyPageProps> = ({ onOpenDonate
           // Financials Tab
           financials:
             activeTab === 'financials' && (
-              <section className="space-y-8 animate-fadeIn">
+              <section id = "financials" className="space-y-8 animate-fadeIn">
                 <SectionHeading
                   eyebrow="Annual Returns"
                   title="Independent Auditor Statements"
@@ -351,7 +310,8 @@ export const TransparencyPage: React.FC<TransparencyPageProps> = ({ onOpenDonate
                     </p>
                     <div className="pt-2">
                       <button
-                        onClick={onOpenDonate}
+                        // onClick={onOpenDonate}
+                        onClick={() => window.open(DONATION_PAYMENT_URL, "_blank", "noopener,noreferrer")}
                         className="px-7 py-3.5 rounded-2xl bg-[#C85A32] hover:bg-[#b54c26] text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg"
                       >
                         Support the Movement

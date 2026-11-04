@@ -38,7 +38,7 @@ export const BottomCTABand: React.FC<BottomCTABandProps> = ({
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               id="cta-band-volunteer-link"
-              to="/get-involved"
+              to="/get-involved#application-form-section"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl text-xs font-bold uppercase tracking-wider bg-white text-slate-900 hover:bg-slate-100 shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               <Users className="w-4 h-4 text-emerald-700" />

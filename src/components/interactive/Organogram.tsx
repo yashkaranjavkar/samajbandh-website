@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Users, ChevronDown, ChevronUp, Shield, Sparkles, Building, Heart } from 'lucide-react';
+import {ORG_TREE} from "../../data/mockData"
+
 
 interface OrganogramNode {
   id: string;
@@ -7,270 +9,346 @@ interface OrganogramNode {
   subtitle: string;
   description: string;
   membersCount?: string;
-  category: 'board' | 'advisory' | 'leadership' | 'core' | 'regional' | 'grassroots';
+  category:string;
   children?: OrganogramNode[];
 }
 
-const ORG_TREE: OrganogramNode = {
-  id: 'board-tier',
-  role: 'Board of Trustees',
-  subtitle: 'Legal Governance, Statutory Compliance & Ethical Custodianship',
-  description: 'Composed of experienced public health specialists, social development leaders, and legal counsels guiding institutional fidelity, 80G/12A compliance, and financial audits.',
-  membersCount: '3 Trustees',
-  category: 'board',
-  children: [
-    {
-      id: 'advisory-tier',
-      role: 'Advisory Board',
-      subtitle: 'Strategic Counsel on Health Policy, Tribal Rights & CSR Partnerships',
-      description: 'Senior mentors providing guidance on epidemiological research, tribal community mediation, and corporate ESG alignments.',
-      membersCount: '4 Honorary Advisors',
-      category: 'advisory',
-      children: [
-        {
-          id: 'leadership-tier',
-          role: 'Executive Leadership & Founder',
-          subtitle: 'Sachin Asha Subhash (Founder & Managing Trustee)',
-          description: 'Grassroots vision-keeper driving field program architecture, Gaokor rest shed mediation, and decentralized production scaling.',
-          category: 'leadership',
-          children: [
-            {
-              id: 'programs-wing',
-              role: 'Programs & Fellowship Directorate',
-              subtitle: 'Pooja Gaikwad (Head of Programs)',
-              description: 'Manages Arogya Samwadak Fellowships, School & College Samata curriculum, and ToT master trainings.',
-              membersCount: '6 Program Officers',
-              category: 'core',
-              children: [
-                {
-                  id: 'fellows-network',
-                  role: 'Arogya Samwadak Fellows & Coordinators',
-                  subtitle: '140+ Active Grassroots Health Champions',
-                  description: 'Trained local youth conducting weekly village circles, adolescent counseling, and Anganwadi linkages.',
-                  membersCount: '140+ Fellows',
-                  category: 'grassroots'
-                }
-              ]
-            },
-            {
-              id: 'production-wing',
-              role: 'Decentralized Production & Livelihoods',
-              subtitle: 'Anil Sonawane (Head of Production & QA)',
-              description: 'Supervises raw fabric sourcing, artisan skill upgrades, zero-waste cutting patterns, and strict sanitary sterilization.',
-              membersCount: '4 Technical Supervisors',
-              category: 'core',
-              children: [
-                {
-                  id: 'shg-artisans',
-                  role: 'SHG Women Artisan Collectives',
-                  subtitle: '15 Decentralized Micro-Units (95+ Tailors)',
-                  description: 'Self-Help Group members stitching, inspecting, and packaging Asha reusable cloth pads with fair living wages.',
-                  membersCount: '95+ Artisans',
-                  category: 'grassroots'
-                }
-              ]
-            },
-            {
-              id: 'advocacy-wing',
-              role: 'Research, Advocacy & Tribal Outreach',
-              subtitle: 'Field Research & Gaokor Mediation Desk',
-              description: 'Leads community consensus dialogues with tribal councils, epidemiological surveys, and state health white papers.',
-              membersCount: '4 Field Researchers',
-              category: 'core',
-              children: [
-                {
-                  id: 'volunteer-network',
-                  role: 'Samajbandh Volunteer Network',
-                  subtitle: '300+ Active Youth & Medical Volunteers',
-                  description: 'Supporting health camps, school kit packaging drives, cloth donation sorting, and digital awareness.',
-                  membersCount: '300+ Volunteers',
-                  category: 'grassroots'
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
+// category
+//     | 'board'
+//     | 'advisory'
+//     | 'leadership'
+//     | 'core'
+//     | 'regional'
+//     | 'grassroots';
+
+// --------------------------------------------------
+// ORGANOGRAM DATA
+// Update this object to add, remove, or edit nodes.
+// --------------------------------------------------
+
+const ORG_TREE_STRUCT: OrganogramNode = ORG_TREE 
+
+// --------------------------------------------------
+// CATEGORY STYLES
+// --------------------------------------------------
+
+const categoryStyles: Record<
+  OrganogramNode['category'],
+  {
+    card: string;
+    badge: string;
+    dot: string;
+  }
+> = {
+  board: {
+    card: 'bg-[#143D2B] text-white border-[#143D2B]',
+    badge: 'bg-white/15 text-white',
+    dot: 'bg-white',
+  },
+  advisory: {
+    card: 'bg-[#244F3B] text-white border-[#244F3B]',
+    badge: 'bg-white/15 text-white',
+    dot: 'bg-white',
+  },
+  leadership: {
+    card: 'bg-[#C85A32] text-white border-[#C85A32]',
+    badge: 'bg-white/20 text-white',
+    dot: 'bg-white',
+  },
+  core: {
+    card: 'bg-[#FBF9F5] text-[#143D2B] border-[#E5DFC5]',
+    badge: 'bg-[#E8EFE9] text-[#143D2B]',
+    dot: 'bg-[#C85A32]',
+  },
+  regional: {
+    card: 'bg-[#EDF5EF] text-[#143D2B] border-[#C9DCCB]',
+    badge: 'bg-[#D8E9DA] text-[#143D2B]',
+    dot: 'bg-[#3D8056]',
+  },
+  grassroots: {
+    card: 'bg-[#FFF4E8] text-[#493522] border-[#EAD5B8]',
+    badge: 'bg-[#F5E3CC] text-[#79512A]',
+    dot: 'bg-[#C78A3B]',
+  },
 };
 
-export const Organogram: React.FC = () => {
-  const [activeTier, setActiveTier] = useState<string>('leadership-tier');
+// --------------------------------------------------
+// RECURSIVE ORGANOGRAM NODE
+// --------------------------------------------------
+
+interface OrganogramTreeNodeProps {
+  node: OrganogramNode;
+  activeTier: string;
+  onSelect: (id: string) => void;
+}
+
+const OrganogramTreeNode: React.FC<OrganogramTreeNodeProps> = ({
+  node,
+  activeTier,
+  onSelect,
+}) => {
+  const styles = categoryStyles[node.category];
+  const isActive = activeTier === node.id;
+  const hasChildren = Boolean(node.children?.length);
 
   return (
-    <div className="bg-white rounded-3xl p-6 sm:p-8 lg:p-10 border border-[#E5DFC5] shadow-md space-y-8">
-      
-      {/* Introduction Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E5DFC5] pb-6">
-        <div>
-          <span className="text-xs uppercase font-bold text-[#87986A] tracking-wider flex items-center gap-1.5">
-            <Building className="w-3.5 h-3.5" />
-            Institutional Governance & Field Hierarchy
-          </span>
-          <h3 className="text-2xl sm:text-3xl font-serif-heading font-bold text-[#143D2B] mt-1">
-            Samajbandh Organizational Structure
-          </h3>
-          <p className="text-xs sm:text-sm text-[#5C6760] mt-1">
-            A transparent, participatory governance framework connecting trustees with decentralized grassroots women artisans.
-          </p>
-        </div>
-      </div>
-
-      {/* Interactive Visual Organogram View */}
-      <div className="space-y-6">
-        
-        {/* Tier 1: Board of Trustees */}
-        <div className="flex flex-col items-center">
-          <div 
-            onClick={() => setActiveTier('board-tier')}
-            className={`w-full max-w-xl p-4 sm:p-5 rounded-2xl border text-center cursor-pointer transition-all ${
-              activeTier === 'board-tier'
-                ? 'bg-[#143D2B] text-white shadow-lg border-[#143D2B] ring-4 ring-[#143D2B]/15'
-                : 'bg-[#FBF9F5] text-[#1F2421] border-[#E5DFC5] hover:border-[#143D2B]/40'
-            }`}
-          >
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <Shield className="w-4 h-4 text-[#D99B26]" />
-              <h4 className="text-base sm:text-lg font-serif-heading font-bold">
-                Board of Trustees
-              </h4>
+    <div className="flex flex-col items-center w-full min-w-0">
+      {/* Node card */}
+      <button
+        type="button"
+        onClick={() => onSelect(node.id)}
+        aria-pressed={isActive}
+        className={`
+          relative w-full max-w-[340px] min-h-[150px]
+          rounded-2xl border p-5 text-left
+          shadow-sm transition-all duration-200
+          hover:-translate-y-1 hover:shadow-lg
+          focus:outline-none focus:ring-2
+          focus:ring-[#C85A32] focus:ring-offset-2
+          ${styles.card}
+          ${isActive ? 'ring-2 ring-[#C85A32] ring-offset-2 shadow-lg' : ''}
+        `}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-2 min-w-0">
+            <span
+              className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${styles.dot}`}
+            />
+            <div className="min-w-0">
+              <h3 className="text-base font-bold leading-snug">
+                {node.role}
+              </h3>
             </div>
-            <p className={`text-xs ${activeTier === 'board-tier' ? 'text-emerald-100' : 'text-[#5C6760]'}`}>
-              Legal Governance, Compliance (80G/12A/FCRA) & Fiduciary Oversight
-            </p>
           </div>
 
-          <div className="w-0.5 h-6 bg-[#E5DFC5]"></div>
-
-          {/* Tier 2: Advisory Board */}
-          <div 
-            onClick={() => setActiveTier('advisory-tier')}
-            className={`w-full max-w-lg p-4 rounded-2xl border text-center cursor-pointer transition-all ${
-              activeTier === 'advisory-tier'
-                ? 'bg-[#1B4332] text-white shadow-lg border-[#1B4332] ring-4 ring-[#1B4332]/15'
-                : 'bg-[#FBF9F5] text-[#1F2421] border-[#E5DFC5] hover:border-[#143D2B]/40'
-            }`}
-          >
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <Sparkles className="w-4 h-4 text-[#C85A32]" />
-              <h4 className="text-sm sm:text-base font-serif-heading font-bold">
-                Advisory Board
-              </h4>
-            </div>
-            <p className={`text-xs ${activeTier === 'advisory-tier' ? 'text-emerald-100' : 'text-[#5C6760]'}`}>
-              Public Health, Tribal Rights & CSR Strategic Guidance
-            </p>
-          </div>
-
-          <div className="w-0.5 h-6 bg-[#E5DFC5]"></div>
-
-          {/* Tier 3: Founder & Executive Leadership */}
-          <div 
-            onClick={() => setActiveTier('leadership-tier')}
-            className={`w-full max-w-md p-4.5 rounded-2xl border text-center cursor-pointer transition-all ${
-              activeTier === 'leadership-tier'
-                ? 'bg-[#C85A32] text-white shadow-xl border-[#C85A32] ring-4 ring-[#C85A32]/20'
-                : 'bg-amber-50 text-[#1F2421] border-amber-200 hover:border-[#C85A32]'
-            }`}
-          >
-            <span className={`text-[10px] font-bold uppercase tracking-wider block ${activeTier === 'leadership-tier' ? 'text-amber-200' : 'text-[#C85A32]'}`}>
-              Executive Leadership
+          {hasChildren && (
+            <span className="shrink-0 text-xs opacity-75">
+              {node.children?.length} {node.children?.length === 1 ? 'unit' : 'units'}
             </span>
-            <h4 className="text-base sm:text-lg font-serif-heading font-bold mt-0.5">
-              Sachin Asha Subhash
-            </h4>
-            <p className={`text-xs ${activeTier === 'leadership-tier' ? 'text-amber-100' : 'text-[#5C6760]'}`}>
-              Founder & Managing Trustee (MSW, TISS)
-            </p>
-          </div>
-
-          <div className="w-0.5 h-6 bg-[#E5DFC5]"></div>
-
-          {/* Tier 4: Functional Core Wings */}
-          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            
-            {/* Wing 1 */}
-            <div 
-              onClick={() => setActiveTier('programs-wing')}
-              className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
-                activeTier === 'programs-wing'
-                  ? 'bg-emerald-50 border-[#143D2B] ring-2 ring-[#143D2B]'
-                  : 'bg-[#FBF9F5] border-[#E5DFC5] hover:border-gray-400'
-              }`}
-            >
-              <h5 className="text-sm font-bold text-[#143D2B]">
-                Programs & Fellowships
-              </h5>
-              <p className="text-xs text-[#5C6760] mt-1">
-                Arogya Samwadak Fellowship, School Samata & ToT Certifications
-              </p>
-              <div className="mt-3 pt-3 border-t border-[#E5DFC5] text-xs font-semibold text-[#C85A32]">
-                ↓ 140+ Arogya Samwadak Fellows
-              </div>
-            </div>
-
-            {/* Wing 2 */}
-            <div 
-              onClick={() => setActiveTier('production-wing')}
-              className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
-                activeTier === 'production-wing'
-                  ? 'bg-emerald-50 border-[#143D2B] ring-2 ring-[#143D2B]'
-                  : 'bg-[#FBF9F5] border-[#E5DFC5] hover:border-gray-400'
-              }`}
-            >
-              <h5 className="text-sm font-bold text-[#143D2B]">
-                Asha Production & Livelihoods
-              </h5>
-              <p className="text-xs text-[#5C6760] mt-1">
-                Decentralized Micro-Centres, Sourcing & Technical Quality Control
-              </p>
-              <div className="mt-3 pt-3 border-t border-[#E5DFC5] text-xs font-semibold text-[#C85A32]">
-                ↓ 15 SHG Units / 95+ Women Artisans
-              </div>
-            </div>
-
-            {/* Wing 3 */}
-            <div 
-              onClick={() => setActiveTier('advocacy-wing')}
-              className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
-                activeTier === 'advocacy-wing'
-                  ? 'bg-emerald-50 border-[#143D2B] ring-2 ring-[#143D2B]'
-                  : 'bg-[#FBF9F5] border-[#E5DFC5] hover:border-gray-400'
-              }`}
-            >
-              <h5 className="text-sm font-bold text-[#143D2B]">
-                Tribal Reforms & Volunteer Desk
-              </h5>
-              <p className="text-xs text-[#5C6760] mt-1">
-                Kurma Sudhar Karykram, White Papers & Statewide Volunteer Drives
-              </p>
-              <div className="mt-3 pt-3 border-t border-[#E5DFC5] text-xs font-semibold text-[#C85A32]">
-                ↓ 300+ Volunteers Across Maharashtra
-              </div>
-            </div>
-
-          </div>
-
+          )}
         </div>
 
-        {/* Selected Tier Explanatory Detail Card */}
-        <div className="p-5 rounded-2xl bg-[#F4EFE6] border border-[#E5DFC5] flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-[#143D2B] text-white flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5" />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold text-[#143D2B]">
-              Democratic, Grassroots-First Philosophy
-            </h4>
-            <p className="text-xs text-[#5C6760] mt-1 leading-relaxed">
-              Every production micro-unit operates as a cooperative node where local women tailors maintain leadership over daily workflow and local pricing decisions. Field fellows in tribal areas are selected directly from the indigenous community to ensure deep cultural respect and long-term trust.
-            </p>
-          </div>
+        <p className="mt-2 text-sm font-medium opacity-90">
+          {node.subtitle}
+        </p>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span
+            className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider ${styles.badge}`}
+          >
+            {node.category}
+          </span>
+
+          {node.membersCount && (
+            <span className="text-xs opacity-80">
+              {node.membersCount}
+            </span>
+          )}
         </div>
+      </button>
 
-      </div>
+      {/* Child nodes */}
+      {hasChildren && (
+        <>
+          {/* Vertical connector */}
+          <div className="h-7 w-px bg-[#C9C3B4]" />
 
+          {/* Children */}
+          <div className="relative w-full">
+            {node.children!.length > 1 && (
+              <div className="absolute left-[10%] right-[10%] top-0 h-px bg-[#C9C3B4]" />
+            )}
+
+            <div
+              className={`
+                grid grid-cols-1 gap-6 pt-0
+                ${node.children!.length === 2 ? 'md:grid-cols-2' : ''}
+                ${node.children!.length >= 3 ? 'md:grid-cols-2 xl:grid-cols-3' : ''}
+              `}
+            >
+              {node.children!.map((child) => (
+                <div
+                  key={child.id}
+                  className="relative flex min-w-0 flex-col items-center"
+                >
+                  {/* Connector to child */}
+                  {node.children!.length > 1 && (
+                    <div className="h-6 w-px bg-[#C9C3B4]" />
+                  )}
+
+                  <OrganogramTreeNode
+                    node={child}
+                    activeTier={activeTier}
+                    onSelect={onSelect}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
+
+// --------------------------------------------------
+// FIND SELECTED NODE
+// --------------------------------------------------
+
+const findNode = (
+  node: OrganogramNode,
+  id: string
+): OrganogramNode | null => {
+  if (node.id === id) {
+    return node;
+  }
+
+  for (const child of node.children ?? []) {
+    const found = findNode(child, id);
+
+    if (found) {
+      return found;
+    }
+  }
+
+  return null;
+};
+
+// --------------------------------------------------
+// MAIN ORGANOGRAM COMPONENT
+// --------------------------------------------------
+
+const Organogram: React.FC = () => {
+  const [activeTier, setActiveTier] = useState<string>(
+    ORG_TREE_STRUCT.id
+  );
+
+  const selectedNode = findNode(ORG_TREE_STRUCT, activeTier);
+
+  return (
+    <section className="w-full bg-[#FBF9F5] px-4 py-16 sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-7xl">
+
+        {/* Section heading */}
+        <div className="mx-auto mb-12 max-w-3xl text-center">
+          <span className="inline-block rounded-full bg-[#E8EFE9] px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-[#143D2B]">
+            Our Structure
+          </span>
+
+          <h2 className="mt-5 font-serif text-3xl font-bold text-[#143D2B] sm:text-4xl lg:text-5xl">
+            Organisational Structure
+          </h2>
+
+          <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
+            A collaborative network of leadership, programme teams,
+            advisors, fellows, and community partners working together
+            towards menstrual dignity and equality.
+          </p>
+        </div>
+
+        {/* Organogram hierarchy */}
+        <div className="rounded-[2rem] border border-[#E5DFC5] bg-white p-4 shadow-sm sm:p-8 lg:p-10">
+          <div className="mx-auto max-w-5xl">
+            <OrganogramTreeNode
+              node={ORG_TREE_STRUCT}
+              activeTier={activeTier}
+              onSelect={setActiveTier}
+            />
+          </div>
+        </div>
+
+        {/* Selected node details */}
+        {selectedNode && (
+          <div className="mx-auto mt-8 max-w-4xl">
+            <div className="rounded-3xl border border-[#E5DFC5] bg-white p-6 shadow-sm sm:p-8">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#C85A32]">
+                    Selected Department
+                  </span>
+
+                  <h3 className="mt-2 font-serif text-2xl font-bold text-[#143D2B]">
+                    {selectedNode.role}
+                  </h3>
+
+                  <p className="mt-2 text-sm font-semibold text-slate-500">
+                    {selectedNode.subtitle}
+                  </p>
+                </div>
+
+                <span
+                  className={`
+                    inline-flex w-fit rounded-full px-4 py-2
+                    text-xs font-bold uppercase tracking-wider
+                    ${categoryStyles[selectedNode.category].badge}
+                  `}
+                >
+                  {selectedNode.category}
+                </span>
+              </div>
+
+              <div className="my-5 h-px bg-[#E5DFC5]" />
+
+              <p className="text-sm leading-7 text-slate-600 sm:text-base">
+                {selectedNode.description}
+              </p>
+
+              {selectedNode.membersCount && (
+                <p className="mt-4 text-sm font-semibold text-[#143D2B]">
+                  Members: {selectedNode.membersCount}
+                </p>
+              )}
+
+              {selectedNode.children?.length ? (
+                <div className="mt-5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Reporting Units
+                  </p>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {selectedNode.children.map((child) => (
+                      <button
+                        key={child.id}
+                        type="button"
+                        onClick={() => setActiveTier(child.id)}
+                        className="rounded-full border border-[#E5DFC5] bg-[#FBF9F5] px-4 py-2 text-xs font-semibold text-[#143D2B] transition hover:border-[#C85A32] hover:bg-[#F8EDE7]"
+                      >
+                        {child.role}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        )}
+
+        {/* Legend */}
+        <div className="mt-10 flex flex-wrap justify-center gap-x-6 gap-y-3">
+          {(
+            [
+              ['board', 'Governance'],
+              ['advisory', 'Advisory'],
+              ['leadership', 'Leadership'],
+              ['core', 'Core Teams'],
+              ['regional', 'Regional Network'],
+              ['grassroots', 'Grassroots Network'],
+            ] as const
+          ).map(([category, label]) => (
+            <div key={category} className="flex items-center gap-2">
+              <span
+                className={`h-3 w-3 rounded-full ${categoryStyles[category].dot}`}
+              />
+              <span className="text-xs font-medium text-slate-600">
+                {label}
+              </span>
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </section>
+  );
+};
+
+export default Organogram;

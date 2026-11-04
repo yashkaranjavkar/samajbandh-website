@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Heart, 
@@ -29,11 +29,11 @@ import { InteractiveMap } from '../components/interactive/InteractiveMap';
 import { BottomCTABand } from '../components/layout/BottomCTABand';
 import { CountUpNumber } from '../components/common/CountUpNumber';
 import { 
+  HERO_SLIDES,
   PROGRAMS_DATA, 
   IMPACT_STATS, 
   IMPACT_STORIES, 
   NEWS_DATA, 
-  EVENTS_DATA, 
   PRODUCTS_DATA, 
   PARTNERS_DATA, 
   AWARDS_DATA,
@@ -51,32 +51,6 @@ interface HomePageProps {
   onOpenRegistration: (event: EventItem) => void;
 }
 
-const HERO_SLIDES = [
-  {
-    id: 1,
-    tag: 'Menstrual Equity & Dignity',
-    headline: 'Building healthier, more equitable menstrual health ecosystems.',
-    subtext: 'Combining science-backed community education, grassroots youth fellowships, and decentralized women-led reusable pad micro-manufacturing across rural and tribal Maharashtra.',
-    image: '/images/fellowship/arogya-samwadak-session.jpg',
-    caption: 'Arogya Samwadak Fellowship Circle in rural Pune'
-  },
-  {
-    id: 2,
-    tag: 'Women-Led Green Livelihoods',
-    headline: 'Stitching freedom, dignity and sustainable economic agency.',
-    subtext: '15 decentralized Asha Cloth Pad Production Centres run by rural Self-Help Groups, providing fair living wages and manufacturing 100% skin-safe, zero-plastic sanitary pads.',
-    image: '/images/kurma/tailoring-training-unit.jpg',
-    caption: 'Artisan stitching unit at Junnar Micro-Centre'
-  },
-  {
-    id: '3',
-    tag: 'Tribal Rest Shed Reforms',
-    headline: 'Transforming seclusion huts into dignified community rest homes.',
-    subtext: 'Through deep community consensus, the Kurma Sudhar Karykram equips traditional tribal isolation huts with clean water, solar light, and hygienic safety.',
-    image: '/images/kurma/community-session-under-tree.jpg',
-    caption: 'Gaokor Rest Home Reformation in Bhamragad, Gadchiroli'
-  }
-];
 
 export const HomePage: React.FC<HomePageProps> = ({
   onOpenDonate,
@@ -86,6 +60,21 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHeroPlaying, setIsHeroPlaying] = useState(true);
   const [isDocumentaryPlaying, setIsDocumentaryPlaying] = useState(false);
+
+  // Live event seat availability (loaded from the backend).
+  type EventAvailability = {
+    eventId: string;
+    eventTitle: string;
+    totalSeats: number;
+    registered: number;
+    seatsLeft: number;
+    isFull: boolean;
+  };
+
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [eventAvailability, setEventAvailability] = useState<Record<string, EventAvailability>>({});
+  const [availabilityLoading, setAvailabilityLoading] = useState(true);
+  const [availabilityError, setAvailabilityError] = useState(false);
 
   // Join us form state
   const [joinType, setJoinType] = useState('volunteer');
@@ -104,6 +93,44 @@ export const HomePage: React.FC<HomePageProps> = ({
     }, 6500);
     return () => clearInterval(timer);
   }, [isHeroPlaying]);
+
+  // Fetch current registrations and remaining seats for every event.
+  const fetchEventAvailability = useCallback(async () => {
+    // Events are admin-managed, so reload them together with the seat counts.
+    ApiService.getEvents().then(setEvents).catch(() => undefined);
+    try {
+      const result = await ApiService.getEventAvailability();
+      if (!result?.success || !result?.data) {
+        throw new Error('Unable to fetch event availability');
+      }
+      setEventAvailability(result.data as Record<string, EventAvailability>);
+      setAvailabilityError(false);
+    } catch (error) {
+      console.error('Event availability error:', error);
+      setAvailabilityError(true);
+    } finally {
+      setAvailabilityLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEventAvailability();
+
+    // Refresh when the user returns to this tab.
+    const handleFocus = () => fetchEventAvailability();
+    // Refresh immediately after the registration modal reports success.
+    const handleRegistrationSuccess = () => fetchEventAvailability();
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('event-registration-success', handleRegistrationSuccess);
+    const intervalId = window.setInterval(fetchEventAvailability, 30000);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('event-registration-success', handleRegistrationSuccess);
+      window.clearInterval(intervalId);
+    };
+  }, [fetchEventAvailability]);
 
   const handleJoinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -429,10 +456,10 @@ export const HomePage: React.FC<HomePageProps> = ({
                 subtitle="Addressing menstrual stigma, women’s livelihood creation, and safe sanitation across rural and tribal ecosystems."
                 action={
                   <Link
-                    to="/our-work"
+                    to="/our-work#programs"
                     className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900 hover:text-[#C85A32] transition-colors"
                   >
-                    <span>View All 9 Programs</span>
+                    <span>View All Programs</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 }
@@ -714,9 +741,9 @@ export const HomePage: React.FC<HomePageProps> = ({
             </section>
           ),
 
-          // 5.8 UPCOMING OPPORTUNITIES & WORKSHOPS - Bento Dark Container
+          // 5.8 UPCOMING OPPORTUNITIES & WORKSHOPS - Live seat availability
           upcomingEvents: (
-            <section className="bg-slate-900 text-white py-14 px-6 sm:px-10 lg:px-12 rounded-[2.5rem] shadow-2xl border border-slate-800" aria-label="Upcoming Programs and Registration">
+            <section id="upcoming-events" className="scroll-mt-28 bg-slate-900 text-white py-14 px-6 sm:px-10 lg:px-12 rounded-[2.5rem] shadow-2xl border border-slate-800" aria-label="Upcoming Programs and Registration">
               <SectionHeading
                 eyebrow="Participate & Learn"
                 title="Join an Upcoming Program or Workshop"
@@ -724,53 +751,94 @@ export const HomePage: React.FC<HomePageProps> = ({
                 light
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                {EVENTS_DATA.map((ev) => (
-                  <div
-                    key={ev.id}
-                    className="bg-slate-800/90 rounded-[2rem] p-6 border border-slate-700/80 shadow-md flex flex-col justify-between space-y-4 hover:border-slate-600 transition-all"
-                  >
-                    <div className="space-y-2.5">
-                      <div className="flex items-center justify-between text-xs text-emerald-400">
-                        <span className="bg-slate-700/80 px-3 py-1 rounded-full font-bold uppercase tracking-wider text-[10px]">
-                          {ev.type}
-                        </span>
-                        <span className="flex items-center gap-1 text-slate-300 font-medium">
-                          <Calendar className="w-3.5 h-3.5 text-amber-400" />
-                          {ev.date.split('(')[0]}
-                        </span>
+              {availabilityError && (
+                <p role="status" className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-200">
+                  Seat availability is temporarily unavailable. Please try again shortly.
+                </p>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-8">
+                {events.length === 0 && (
+                  <p className="text-sm text-slate-300 col-span-full">
+                    {availabilityLoading ? 'Loading upcoming programs...' : 'No upcoming programs are open right now. Please check back soon.'}
+                  </p>
+                )}
+                {events.map((ev) => {
+                  const availability = eventAvailability[ev.id];
+                  const hasAvailability = Boolean(availability) && !availabilityError;
+                  const totalSeats = availability?.totalSeats ?? 0;
+                  const registered = availability?.registered ?? 0;
+                  const seatsLeft = availability?.seatsLeft ?? 0;
+                  const progress = totalSeats > 0
+                    ? Math.min(100, Math.round((registered / totalSeats) * 100))
+                    : 0;
+                  const isFull = hasAvailability && (availability?.isFull || seatsLeft <= 0);
+                  const registrationClosed = ev.registrationOpen === false;
+                  const canRegister = !availabilityLoading && hasAvailability && !isFull && !registrationClosed;
+
+                  return (
+                    <article
+                      key={ev.id}
+                      className="bg-slate-800/90 rounded-[2rem] p-6 border border-slate-700/80 shadow-md flex flex-col justify-between gap-5 hover:border-slate-600 transition-all"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-3 text-xs text-emerald-400">
+                          <span className="bg-slate-700/80 px-3 py-1 rounded-full font-bold uppercase tracking-wider text-[10px]">
+                            {ev.type}
+                          </span>
+                          <span className="flex items-center gap-1 text-slate-300 font-medium">
+                            <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                            {ev.date.split('(')[0]}
+                          </span>
+                        </div>
+
+                        <h3 className="text-base font-bold text-white leading-snug">{ev.title}</h3>
+                        <p className="text-xs text-slate-300 line-clamp-3 leading-relaxed">{ev.description}</p>
+                        <div className="text-[11px] text-slate-400 pt-1 flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-rose-400" />
+                          <span>{ev.location}</span>
+                        </div>
                       </div>
 
-                      <h3 className="text-base font-bold text-white leading-snug">
-                        {ev.title}
-                      </h3>
+                      <div className="pt-4 border-t border-slate-700 space-y-3">
+                        {availabilityLoading ? (
+                          <p className="text-xs text-slate-300">Checking seat availability...</p>
+                        ) : hasAvailability ? (
+                          <>
+                            <div className="flex items-center justify-between gap-3 text-xs">
+                              <span className="text-slate-300">
+                                {registered} / {totalSeats} registered
+                              </span>
+                              <span className={isFull ? 'text-rose-300 font-semibold' : 'text-emerald-300 font-semibold'}>
+                                {isFull ? 'Fully booked' : `${seatsLeft} seats left`}
+                              </span>
+                            </div>
+                            <div className="h-2 rounded-full bg-slate-700 overflow-hidden" role="progressbar" aria-label={`${ev.title} registration progress`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
+                              <div className="h-full rounded-full bg-emerald-400 transition-all duration-500" style={{ width: `${progress}%` }} />
+                            </div>
+                          </>
+                        ) : (
+                          <p className="text-xs text-amber-200">Seat count could not be verified.</p>
+                        )}
 
-                      <p className="text-xs text-slate-300 line-clamp-3 leading-relaxed">
-                        {ev.description}
-                      </p>
-
-                      <div className="text-[11px] text-slate-400 pt-1 flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-rose-400" />
-                        <span>{ev.location}</span>
+                        <div className="flex items-center justify-between gap-3">
+                          <button
+                            type="button"
+                            onClick={() => onOpenRegistration(ev)}
+                            disabled={!canRegister}
+                            className="px-4 py-2 rounded-xl bg-[#C85A32] hover:bg-[#b54c26] disabled:bg-slate-600 disabled:text-slate-300 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md"
+                          >
+                            <span>{registrationClosed ? 'Registration Closed' : isFull ? 'Fully Booked' : 'Register Now'}</span>
+                            {!registrationClosed && !isFull && <ArrowRight className="w-3.5 h-3.5" />}
+                          </button>
+                          {hasAvailability && (
+                            <span className="text-[10px] text-slate-400">Capacity: {totalSeats}</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-slate-700 flex items-center justify-between">
-                      <button
-                        onClick={() => onOpenRegistration(ev)}
-                        className="px-4 py-2 rounded-xl bg-[#C85A32] hover:bg-[#b54c26] text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md"
-                      >
-                        <span>Register Now</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                      {ev.seatsLeft && (
-                        <span className="text-[11px] text-amber-400 font-semibold">
-                          {ev.seatsLeft} seats left
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                    </article>
+                  );
+                })}
               </div>
             </section>
           ),
@@ -815,10 +883,13 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
 
               {/* Awards Bento Band */}
+              <h3 className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
+                  Awards & Recognition
+                </h3>
               <div className="pt-6">
-                <span className="text-xs uppercase font-bold text-amber-600 tracking-widest block mb-4">
+                {/* <span className="text-xs uppercase font-bold text-amber-600 tracking-widest block mb-4">
                   Awards & Recognition (2025, 2024, 2023)
-                </span>
+                </span> */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {AWARDS_DATA.map((award) => (
                     <div key={award.id} className="p-5 rounded-[2rem] bg-white border border-slate-200 text-left shadow-xs hover:shadow-md transition-all">
@@ -831,155 +902,6 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
             </section>
           ),
-
-          // 5.12 JOIN US FORM SECTION - Bento Pod
-          // joinForm: (
-          //   <section aria-label="Join the Movement">
-          //     <div className="bg-white rounded-[2.5rem] p-8 sm:p-12 border border-slate-200 shadow-xl">
-          //       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            
-          //         <div className="lg:col-span-5 space-y-4">
-          //           <span className="text-xs font-bold uppercase text-[#C85A32] tracking-widest">
-          //             Community Action
-          //           </span>
-          //           <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-          //             Join the Samajbandh Movement
-          //           </h2>
-          //           <p className="text-sm text-slate-600 leading-relaxed">
-          //             Whether you want to volunteer on-ground, donate clean cotton cloth for pad liners, sponsor village clusters, or partner as an institution — your action restores dignity to menstruators.
-          //           </p>
-
-          //           <div className="space-y-3 pt-2">
-          //             {[
-          //               '1. Volunteer for School & Village Circles',
-          //               '2. Donate Clean Cotton Cloth for Liners',
-          //               '3. CSR & Institutional Partnerships',
-          //               '4. Academic Research Collaboration',
-          //               '5. Spread the Word in Your City'
-          //             ].map((item, idx) => (
-          //               <div key={idx} className="flex items-center gap-2.5 text-xs font-bold text-slate-800">
-          //                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          //                 <span>{item}</span>
-          //               </div>
-          //             ))}
-          //           </div>
-          //         </div>
-
-          //         <div className="lg:col-span-7 bg-slate-50 p-6 sm:p-8 rounded-[2rem] border border-slate-200">
-          //           {joinStatus === 'success' ? (
-          //             <div className="text-center py-10 space-y-3">
-          //               <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
-          //                 <CheckCircle2 className="w-7 h-7" />
-          //               </div>
-          //               <h3 className="text-lg font-bold text-slate-900">
-          //                 Thank You for Stepping Up!
-          //               </h3>
-          //               <p className="text-xs text-slate-600 max-w-sm mx-auto">
-          //                 We have received your details. Our volunteer & engagement coordinator will contact you via email/phone shortly.
-          //               </p>
-          //               <button
-          //                 onClick={() => setJoinStatus('idle')}
-          //                 className="mt-2 text-xs font-bold text-emerald-700 hover:underline"
-          //               >
-          //                 Submit another response
-          //               </button>
-          //             </div>
-          //           ) : (
-          //             <form onSubmit={handleJoinSubmit} className="space-y-4">
-          //               <div>
-          //                 <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
-          //                   Preferred Way to Contribute *
-          //                 </label>
-          //                 <select
-          //                   value={joinType}
-          //                   onChange={(e) => setJoinType(e.target.value)}
-          //                   className="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all font-medium"
-          //                 >
-          //                   <option value="volunteer">Become a Ground / Digital Volunteer</option>
-          //                   <option value="donate-cloth">Donate Clean Cotton Cloth</option>
-          //                   <option value="csr-partner">Corporate CSR Partnership</option>
-          //                   <option value="school-workshop">Host a School / College Workshop</option>
-          //                   <option value="fellowship">Inquire About Arogya Samwadak Fellowship</option>
-          //                 </select>
-          //               </div>
-
-          //               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          //                 <div>
-          //                   <label className="block text-xs font-semibold text-slate-600 mb-1">Full Name *</label>
-          //                   <input
-          //                     type="text"
-          //                     value={joinName}
-          //                     onChange={(e) => setJoinName(e.target.value)}
-          //                     placeholder="Your Name"
-          //                     className="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all"
-          //                     required
-          //                   />
-          //                 </div>
-          //                 <div>
-          //                   <label className="block text-xs font-semibold text-slate-600 mb-1">City / District *</label>
-          //                   <input
-          //                     type="text"
-          //                     value={joinCity}
-          //                     onChange={(e) => setJoinCity(e.target.value)}
-          //                     placeholder="e.g. Pune, Mumbai, Nashik"
-          //                     className="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all"
-          //                     required
-          //                   />
-          //                 </div>
-          //               </div>
-
-          //               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          //                 <div>
-          //                   <label className="block text-xs font-semibold text-slate-600 mb-1">Email Address *</label>
-          //                   <input
-          //                     type="email"
-          //                     value={joinEmail}
-          //                     onChange={(e) => setJoinEmail(e.target.value)}
-          //                     placeholder="you@example.com"
-          //                     className="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all"
-          //                     required
-          //                   />
-          //                 </div>
-          //                 <div>
-          //                   <label className="block text-xs font-semibold text-slate-600 mb-1">Phone / WhatsApp *</label>
-          //                   <input
-          //                     type="tel"
-          //                     value={joinPhone}
-          //                     onChange={(e) => setJoinPhone(e.target.value)}
-          //                     placeholder="+91 98765 43210"
-          //                     className="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all"
-          //                     required
-          //                   />
-          //                 </div>
-          //               </div>
-
-          //               <div>
-          //                 <label className="block text-xs font-semibold text-slate-600 mb-1">Tell us briefly about your interest / skills</label>
-          //                 <textarea
-          //                   rows={2}
-          //                   value={joinMsg}
-          //                   onChange={(e) => setJoinMsg(e.target.value)}
-          //                   placeholder="e.g. I am a medical student available on weekends for awareness drives..."
-          //                   className="w-full px-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-slate-900 transition-all"
-          //                 ></textarea>
-          //               </div>
-
-          //               <button
-          //                 type="submit"
-          //                 disabled={joinStatus === 'loading'}
-          //                 className="w-full py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2"
-          //               >
-          //                 <Send className="w-4 h-4" />
-          //                 <span>{joinStatus === 'loading' ? 'Submitting...' : 'Submit Join Request'}</span>
-          //               </button>
-          //             </form>
-          //           )}
-          //         </div>
-
-          //       </div>
-          //     </div>
-          //   </section>
-          // ),
 
           // 5.13 BOTTOM CTA BAND
           bottomCta: (

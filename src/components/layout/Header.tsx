@@ -3,6 +3,7 @@ import { isSectionVisible } from '../../config/siteLayout';
 import { getSavedLanguage, switchLanguage } from '../../services/language';
 import {DONATION_PAYMENT_URL} from "../../data/mockData";
 import { Link, useLocation } from 'react-router-dom';
+import { LiveRegistrationLink } from './LiveRegistrationLink';
 import { 
   Menu, 
   X, 
@@ -331,6 +332,9 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>Shop Pads</span>
               </Link> */}
 
+              {/* Live event registration (red blinking dot when any event is open) */}
+              <LiveRegistrationLink />
+
               {/* Volunteer CTA */}
               <Link
                 id="header-volunteer-btn"
@@ -370,6 +374,8 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="lg:hidden bg-white border-b border-slate-200 shadow-2xl animate-in slide-in-from-top duration-200">
             <div className="px-4 pt-4 pb-6 space-y-3 max-h-[85vh] overflow-y-auto">
               
+              <LiveRegistrationLink variant="mobile" onNavigate={() => setIsMobileMenuOpen(false)} />
+
               <div className="grid grid-cols-2 gap-2 pt-1 pb-2">
                 <Link
                   to="/products-services"

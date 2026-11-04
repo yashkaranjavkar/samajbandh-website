@@ -2,7 +2,7 @@ import React from 'react';
 import { SectionHeading } from '../components/common/SectionHeading';
 import { SdgGoals } from '../components/common/SdgGoals';
 import { Timeline } from '../components/interactive/Timeline';
-import { Organogram } from '../components/interactive/Organogram';
+import Organogram  from '../components/interactive/Organogram';
 import { BottomCTABand } from '../components/layout/BottomCTABand';
 import { CountUpNumber } from '../components/common/CountUpNumber';
 import { AWARDS_DATA, TEAM_INFO, DONATION_PAYMENT_URL }from '../data/mockData';

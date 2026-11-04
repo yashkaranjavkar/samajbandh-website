@@ -190,7 +190,7 @@ export interface ResourceItem {
   date: string;
   readTime?: string;
   fileSize: string;
-  fileFormat: string;
+  fileFormat?: string;
   downloadUrl?: string;
   language: string;
   topics: string[];
@@ -211,10 +211,13 @@ export interface EventItem {
   title: string;
   type: 'Workshop' | 'Fellowship Camp' | 'Webinar' | 'Awareness Drive' | 'Fundraiser';
   date: string;
+  /** ISO date (YYYY-MM-DD); present on events created from the admin dashboard */
+  eventDate?: string;
   time: string;
   location: string;
   isVirtual: boolean;
   registrationOpen: boolean;
+  totalSeats: number;
   seatsLeft?: number;
   eligibility: string;
   description: string;

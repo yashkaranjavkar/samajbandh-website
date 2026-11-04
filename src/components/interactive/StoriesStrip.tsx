@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Pause, Play, Sparkles } from 'lucide-react';
+import {STORIES_DATA} from  '../../data/mockData';
 
 interface StoryStripItem {
   id: string;
@@ -9,50 +10,7 @@ interface StoryStripItem {
   location: string;
 }
 
-const STORIES_DATA: StoryStripItem[] = [
-  {
-    id: 'strip-1',
-    image: '/images/stories/women-handstitching-pads.jpg',
-    tag: 'Production Artisan',
-    caption: 'Women artisans at Junnar Centre precision-stitching leak-proof 5-layer Asha cloth pads.',
-    location: 'Junnar, Pune'
-  },
-  {
-    id: 'strip-2',
-    image: '/images/kurma/arogya-sakhi-outreach.jpg',
-    tag: 'Youth Fellowship',
-    caption: 'Arogya Samwadak Fellow facilitating an open menstrual myth-busting circle with mothers.',
-    location: 'Kurkheda, Gadchiroli'
-  },
-  {
-    id: 'strip-3',
-    image: '/images/samata-yatra/gender-equality-school.jpg',
-    tag: 'School Samata',
-    caption: 'Classroom gender equity dialogue breaking period shaming among adolescent boys and girls.',
-    location: 'Velhe ZP High School'
-  },
-  {
-    id: 'strip-4',
-    image: '/images/kurma/kurma-hut-entrance.jpg',
-    tag: 'Kurma Sudhar',
-    caption: 'Restructured community rest home equipped with running water, solar power, and bio-toilets.',
-    location: 'Bhamragad Tribal Belt'
-  },
-  {
-    id: 'strip-5',
-    image: '/images/awareness/asha-worker-training.jpg',
-    tag: 'Capacity Building',
-    caption: 'Master Training of Trainers (ToT) certifying frontline ASHA coordinators in MHM pedagogy.',
-    location: 'State Training Hub'
-  },
-  {
-    id: 'strip-6',
-    image: '/images/products/asha-menstrual-kit.jpg',
-    tag: 'Sustainable Hygiene',
-    caption: 'Teaching safe cold-water washing and natural ultraviolet sunlight drying protocols.',
-    location: 'Satara Rural Cluster'
-  }
-];
+const STORIES_DATA_STRIPS: StoryStripItem[] = STORIES_DATA
 
 export const StoriesStrip: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -130,7 +88,7 @@ export const StoriesStrip: React.FC = () => {
           role="region"
           aria-label="Stories strip carousel"
         >
-          {STORIES_DATA.map((story) => (
+          {STORIES_DATA_STRIPS.map((story) => (
             <div
               key={story.id}
               className="w-72 sm:w-80 shrink-0 bg-white rounded-[1.75rem] overflow-hidden border border-slate-200 shadow-xs hover:shadow-md transition-all snap-start flex flex-col p-2 group"

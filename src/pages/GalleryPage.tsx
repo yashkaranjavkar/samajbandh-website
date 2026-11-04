@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { SectionHeading } from '../components/common/SectionHeading';
 import { BottomCTABand } from '../components/layout/BottomCTABand';
 import { LightboxModal } from '../components/modals/LightboxModal';
-import { GALLERY_DATA } from '../data/mockData';
+import { GALLERY_ITEMS } from '../data/mockData';
 import { GalleryItem } from '../types';
 import { 
   Camera, 
@@ -18,6 +18,8 @@ import { PageSections } from '../components/layout/PageSections';
 interface GalleryPageProps {
   onOpenDonate: () => void;
 }
+
+export const GALLERY_DATA = GALLERY_ITEMS;
 
 export const GalleryPage: React.FC<GalleryPageProps> = ({ onOpenDonate }) => {
   const [activeCategory, setActiveCategory] = useState<string>('all');

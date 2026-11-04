@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link  } from 'react-router-dom';
 import { 
   Heart, 
   Mail, 
@@ -12,7 +12,9 @@ import {
   Linkedin, 
   Youtube, 
   Facebook,
-  Award
+  Award,
+  HandHeart,
+  HelpCircle
 } from 'lucide-react';
 import { ApiService } from '../../services/api';
 import { FOOTER_LINKS_DATA, CONTACTS_INFO } from '@/src/data/mockData';
@@ -159,21 +161,20 @@ export const Footer: React.FC = () => {
                   </a>
                 );
               })}
+             {/* FAQ shortcut: right end of the row, same height as the social icons */}
+              <Link
+                to="/faqs"
+                aria-label="Menstrual Health FAQs"
+                title="Menstrual Health FAQs"
+                className="group ml-auto h-9 min-w-[8rem] px-4 rounded-xl bg-emerald-500/15 hover:bg-emerald-500 flex items-center justify-between gap-2 text-emerald-300 hover:text-white text-xs font-bold transition-colors border border-emerald-500/40"
+              >
+                <span className="flex items-center gap-1.5">
+                  <HelpCircle className="w-4 h-4" />
+                  <span>FAQs</span>
+                </span>
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
             </div>
-            {/* <div className="flex items-center space-x-2.5 pt-2">
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram" className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#C85A32] flex items-center justify-center text-slate-300 hover:text-white transition-colors border border-slate-700">
-                <Instagram className="w-4 h-4" />
-              </a>
-              <a href="https://linkedin.com" target="_blank" rel="noreferrer" aria-label="LinkedIn" className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#C85A32] flex items-center justify-center text-slate-300 hover:text-white transition-colors border border-slate-700">
-                <Linkedin className="w-4 h-4" />
-              </a>
-              <a href="https://youtube.com" target="_blank" rel="noreferrer" aria-label="YouTube" className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#C85A32] flex items-center justify-center text-slate-300 hover:text-white transition-colors border border-slate-700">
-                <Youtube className="w-4 h-4" />
-              </a>
-              <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook" className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#C85A32] flex items-center justify-center text-slate-300 hover:text-white transition-colors border border-slate-700">
-                <Facebook className="w-4 h-4" />
-              </a>
-            </div> */}
           </div>
 
           {/* Bento Tile 2: Strategic Pillars & Work */}
@@ -229,11 +230,12 @@ export const Footer: React.FC = () => {
             </div>
 
             <div className="pt-4 space-y-2">
-              <Link to="/transparency" className="text-xs text-amber-400 hover:underline flex items-center gap-1.5 font-semibold">
+              <Link to="/transparency?tab=financials" className="text-xs text-amber-400 hover:underline flex items-center gap-1.5 font-semibold">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Audited Financial Reports
               </Link>
-              <Link to="/transparency" className="text-xs text-slate-400 hover:underline block">
+              <Link to="/transparency?tab=policies" className="text-xs text-slate-400 hover:underline flex items-center gap-1.5 font-semibold">
+                <HandHeart className="w-3.5 h-3.5" />
                 Child Protection & POSH Policies
               </Link>
             </div>

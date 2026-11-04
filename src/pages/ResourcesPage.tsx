@@ -31,7 +31,7 @@ export const ResourcesPage: React.FC<ResourcesPageProps> = ({ onOpenDonate }) =>
   const [lightboxMedia, setLightboxMedia] = useState<any>(null);
 
   const categories = [
-    { id: 'all', label: 'All Knowledge (9)' },
+    { id: 'all', label: 'All Knowledge' },
     { id: 'school-toolkit', label: 'School & Educator Kits' },
     { id: 'iec-material', label: 'IEC Posters & Infographics' },
     { id: 'research-paper', label: 'Research & White Papers' },
@@ -48,9 +48,70 @@ export const ResourcesPage: React.FC<ResourcesPageProps> = ({ onOpenDonate }) =>
     return matchesCategory && matchesLang && matchesSearch;
   });
 
-  const handleDownload = (res: ResourceItem) => {
-    alert(`Downloading "${res.title}" (${res.fileFormat} • ${res.fileSize})...\n\nThis material is published under Creative Commons (CC-BY-NC) for free educational use.`);
+  const handleDownload = async (res: ResourceItem) => {
+    if (!res.downloadUrl) {
+      alert('Download file is not available.');
+      return;
+    }
+
+    try {
+      const url = encodeURI(res.downloadUrl);
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`File request failed: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+
+      if (blob.size === 0) {
+        throw new Error('Downloaded file is empty.');
+      }
+
+      const originalFileName = decodeURIComponent(
+        res.downloadUrl.split('?')[0].split('#')[0].split('/').pop() || 'download'
+      );
+
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+
+      link.href = blobUrl;
+      link.download = originalFileName;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('Unable to download the file. Please check the file path.');
+    }
   };
+
+  // const handleDownload = (res: ResourceItem) => {
+  //   alert(`Downloading "${res.title}" (${res.fileFormat} • ${res.fileSize})...\n\nThis material is published under Creative Commons (CC-BY-NC) for free educational use.`);
+
+  //   if (!res.downloadUrl) {
+  //     alert('Download file is not available yet.');
+  //     return;
+  //   }
+
+  //   const path = decodeURIComponent(res.downloadUrl.split('?')[0].split('#')[0]);
+  //   const originalFileName = path.split('/').pop() || 'download';
+
+  //   const link = document.createElement('a');
+  //   link.href = res.downloadUrl;
+  //   link.download = originalFileName;
+  //   link.target = '_blank';
+  //   link.rel = 'noopener noreferrer';
+
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+
+  // };
+    
 
   return (
     <div className="space-y-16 sm:space-y-24 py-6">

@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import type { VolunteerRecord, BulkOrderRecord } from './database.js';
+import type { VolunteerRecord, BulkOrderRecord, EventRegistrationRecord } from './database.js';
 
 const connectionString = process.env.DATABASE_URL;
 export const pgPool = connectionString ? new Pool({
@@ -384,5 +384,185 @@ export async function updateBulkOrderStatusInPostgres(
     updatedAt: row.updated_at instanceof Date
       ? row.updated_at.toISOString()
       : row.updated_at,
+  };
+}
+
+// --------------------------------------------------
+// EVENT REGISTRATIONS - POSTGRESQL
+// --------------------------------------------------
+
+export async function ensureEventRegistrationTable(): Promise<void> {
+  if (!pgPool) {
+    throw new Error('PostgreSQL is not configured.');
+  }
+
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS event_registrations (
+      id TEXT PRIMARY KEY,
+      event_id TEXT NOT NULL,
+      event_title TEXT NOT NULL DEFAULT '',
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT NOT NULL DEFAULT '',
+      organization TEXT,
+      notes TEXT,
+      status TEXT NOT NULL DEFAULT 'registered',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  // Older deployments may have created the table without the status column.
+  await pgPool.query(`
+    ALTER TABLE event_registrations
+    ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'registered'
+  `);
+
+  await pgPool.query(`
+    CREATE INDEX IF NOT EXISTS idx_event_registrations_event_id
+    ON event_registrations(event_id)
+  `);
+
+  await pgPool.query(`
+    CREATE INDEX IF NOT EXISTS idx_event_registrations_created_at
+    ON event_registrations(created_at DESC)
+  `);
+}
+
+
+// SAVE / UPDATE EVENT REGISTRATION
+export async function persistEventRegistrationToPostgres(
+  record: EventRegistrationRecord
+): Promise<boolean> {
+  if (!pgPool) {
+    console.warn(
+      '[PostgreSQL] DATABASE_URL is not configured; event registration remains in JSON store only.'
+    );
+    return false;
+  }
+
+  await ensureEventRegistrationTable();
+
+  await pgPool.query(
+    `INSERT INTO event_registrations (
+      id,
+      event_id,
+      event_title,
+      name,
+      email,
+      phone,
+      organization,
+      notes,
+      status,
+      created_at
+    )
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+    ON CONFLICT (id) DO UPDATE SET
+      status = EXCLUDED.status,
+      event_id = EXCLUDED.event_id,
+      event_title = EXCLUDED.event_title,
+      name = EXCLUDED.name,
+      email = EXCLUDED.email,
+      phone = EXCLUDED.phone,
+      organization = EXCLUDED.organization,
+      notes = EXCLUDED.notes`,
+    [
+      record.id,
+      record.eventId,
+      record.eventTitle || '',
+      record.name,
+      record.email,
+      record.phone || '',
+      record.organization || null,
+      record.notes || null,
+      record.status || 'registered',
+      record.createdAt,
+    ]
+  );
+
+  return true;
+}
+
+export async function updateEventRegistrationStatusInPostgres(
+  id: string,
+  status: EventRegistrationRecord['status']
+): Promise<EventRegistrationRecord | null> {
+  if (!pgPool) throw new Error('PostgreSQL is not configured.');
+
+  await ensureEventRegistrationTable();
+
+  const result = await pgPool.query(
+    `UPDATE event_registrations SET status = $1 WHERE id = $2 RETURNING *`,
+    [status, id]
+  );
+
+  return result.rows[0] ? mapEventRegistrationRow(result.rows[0]) : null;
+}
+
+function mapEventRegistrationRow(row: any): EventRegistrationRecord {
+  return {
+    id: row.id,
+    eventId: row.event_id,
+    eventTitle: row.event_title || '',
+    name: row.name,
+    email: row.email,
+    phone: row.phone || '',
+    organization: row.organization || undefined,
+    notes: row.notes || undefined,
+    status: row.status || 'registered',
+    createdAt: row.created_at instanceof Date
+      ? row.created_at.toISOString()
+      : new Date(row.created_at).toISOString(),
+  };
+}
+
+
+// GET EVENT REGISTRATIONS
+export async function getEventRegistrationsFromPostgres(): Promise<EventRegistrationRecord[]> {
+  if (!pgPool) {
+    throw new Error('PostgreSQL is not configured. Use JSON fallback instead.');
+  }
+
+  await ensureEventRegistrationTable();
+
+  const result = await pgPool.query(`
+    SELECT *
+    FROM event_registrations
+    ORDER BY created_at DESC
+  `);
+
+  return result.rows.map(mapEventRegistrationRow);
+}
+
+
+// EVENT REGISTRATION STATISTICS
+export async function getEventRegistrationStatsFromPostgres(): Promise<{
+  totalRegistrations: number;
+  eventWise: { eventId: string; eventTitle: string; total: number }[];
+}> {
+  if (!pgPool) {
+    throw new Error('PostgreSQL is not configured.');
+  }
+
+  await ensureEventRegistrationTable();
+
+  const result = await pgPool.query(`
+    SELECT
+      event_id,
+      event_title,
+      COUNT(*)::int AS total
+    FROM event_registrations
+    GROUP BY event_id, event_title
+    ORDER BY event_title
+  `);
+
+  const eventWise = result.rows.map((row) => ({
+    eventId: row.event_id,
+    eventTitle: row.event_title,
+    total: Number(row.total || 0),
+  }));
+
+  return {
+    totalRegistrations: eventWise.reduce((sum, item) => sum + item.total, 0),
+    eventWise,
   };
 }

@@ -8,6 +8,7 @@ interface BulkOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultItem?: string;
+  lockItem?: boolean;
 }
 
 type FieldName =
@@ -77,10 +78,11 @@ const validateField = (
       const quantity = Number(value);
 
       return Number.isInteger(quantity) &&
-        quantity >= 25 &&
-        quantity % 25 === 0
+        quantity >= 1 
+        // &&
+        // quantity % 25 === 0
         ? ''
-        : 'Quantity must be at least 25 and in multiples of 25.';
+        : 'Quantity must be at least 1';
     }
 
     case 'notes':
@@ -97,6 +99,7 @@ export const BulkOrderModal: React.FC<BulkOrderModalProps> = ({
   isOpen,
   onClose,
   defaultItem = 'Asha Reusable Cloth Pads',
+  lockItem = false,
 }) => {
   const [orgName, setOrgName] = useState('');
   const [contactPerson, setContactPerson] = useState('');
@@ -107,7 +110,8 @@ export const BulkOrderModal: React.FC<BulkOrderModalProps> = ({
     PRODUCT_OPTIONS.includes(defaultItem) ? defaultItem : ''
   );
   const [otherItem, setOtherItem] = useState('');
-  const [quantity, setQuantity] = useState('100');
+  // const [quantity, setQuantity] = useState('50');
+  const [quantity, setQuantity] = useState(lockItem ? '1' : '50');
   const [notes, setNotes] = useState('');
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -168,7 +172,9 @@ export const BulkOrderModal: React.FC<BulkOrderModalProps> = ({
           ? otherItem
           : values[field];
 
-      const error = validateField(field, value);
+      // const error = validateField(field, value);
+      const error =
+        field === 'quantity' && lockItem ? '' : validateField(field, value);
 
       if (error) {
         nextErrors[field] = error;
@@ -431,7 +437,6 @@ export const BulkOrderModal: React.FC<BulkOrderModalProps> = ({
                 value={itemType}
                 onChange={(e) => {
                   const value = e.target.value;
-
                   setItemType(value);
 
                   if (value !== 'Other') {
@@ -445,7 +450,11 @@ export const BulkOrderModal: React.FC<BulkOrderModalProps> = ({
                     updateFieldError('itemType', value);
                   }
                 }}
-                className={inputClass('itemType')}
+                disabled={lockItem}
+                
+                className={`${inputClass('itemType')} ${
+                  lockItem ? 'bg-gray-100 cursor-not-allowed opacity-80' : ''
+                }`}
                 required
               >
                 <option value="">Select a product or kit</option>
@@ -484,7 +493,6 @@ export const BulkOrderModal: React.FC<BulkOrderModalProps> = ({
                     className={inputClass('otherItem')}
                     required
                   />
-
                   <ErrorMessage field="otherItem" />
                 </div>
               )}
@@ -500,6 +508,7 @@ export const BulkOrderModal: React.FC<BulkOrderModalProps> = ({
                 min="25"
                 step="25"
                 value={quantity}
+                readOnly={lockItem}
                 onChange={(e) => {
                   setQuantity(e.target.value);
 

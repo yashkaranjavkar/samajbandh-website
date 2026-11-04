@@ -142,7 +142,18 @@ export const ApiService = {
 
   // News & Events
   async getEvents(): Promise<EventItem[]> {
-    return fetchWithFallback<EventItem[]>('/events', EVENTS_DATA);
+    // Events are managed from the admin dashboard and stored in PostgreSQL / the JSON store.
+    // The bundled list is only a fallback for when the API is unreachable.
+    try {
+      const res = await fetch(`${API_BASE}/events`);
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json?.data)) return json.data as EventItem[];
+      }
+    } catch {
+      // fall through to the bundled data
+    }
+    return EVENTS_DATA;
   },
 
   async getNews(): Promise<NewsItem[]> {
@@ -189,6 +200,7 @@ export const ApiService = {
   },
 
   // Form Submissions
+  // The message is emailed straight to the Samajbandh team (nothing is stored), so a failure must be reported.
   async submitContact(data: { name: string; email: string; phone: string; subject: string; message: string; city?: string }) {
     try {
       const res = await fetch(`${API_BASE}/contact`, {
@@ -200,9 +212,9 @@ export const ApiService = {
       await throwIfRejected(res);
     } catch (err) {
       if (err instanceof SubmitError) throw err;
-      // network unavailable: simulated success
+      throw new SubmitError('Unable to reach the server. Your message was not sent. Please try again.');
     }
-    return { success: true, message: 'Thank you for reaching out to Samajbandh. Our team will contact you within 24-48 hours.' };
+    throw new SubmitError('Submission failed. Please try again.');
   },
 
   async submitJoinUs(data: { 
@@ -307,6 +319,124 @@ export const ApiService = {
     return { success: true, message: 'Subscribed successfully to Samajbandh updates.' };
   },
 
+  // async getEventRegistrations() {
+  //   const response = await fetch(`${API_BASE}/events/registrations`);
+
+  //   if (!response.ok) {
+  //     throw new Error('Failed to fetch event registrations');
+  //   }
+
+  //   return response.json();
+  // },
+
+  
+  // --- EVENT REGISTRATION ADMIN SERVICES ---
+
+  async getEventRegistrations(_eventId?: string) {
+    const res = await fetch(`${API_BASE}/events/registrations`, { credentials: 'include' });
+    if (!res.ok) await throwIfRejected(res);
+    const json = await res.json();
+    return (json.data || []).filter((item: any) => !_eventId || item.eventId === _eventId);
+  },
+
+  async updateEventRegistrationStatus(
+    registrationId: string,
+    status: 'registered' | 'attended' | 'absent' | 'cancelled'
+  ) {
+    const res = await fetch(
+      `${API_BASE}/events/registrations/${encodeURIComponent(registrationId)}/status`,
+      { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) }
+    );
+    if (!res.ok) await throwIfRejected(res);
+    return await res.json();
+  },
+
+  async createEvent(data: Record<string, any>) {
+    const res = await fetch(`${API_BASE}/admin/events`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (!res.ok) await throwIfRejected(res);
+    return await res.json();
+  },
+  async updateEvent(id: string, data: Record<string, any>) {
+    const res = await fetch(`${API_BASE}/admin/events/${encodeURIComponent(id)}`, { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (!res.ok) await throwIfRejected(res);
+    return await res.json();
+  },
+
+  async deleteEvent(id: string) {
+    const res = await fetch(`${API_BASE}/admin/events/${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'include' });
+    if (!res.ok) await throwIfRejected(res);
+    return await res.json() as { success: boolean; data: { id: string; registrationsRemoved: number } };
+  },
+
+  /** How many events currently accept registrations. Throws when the API is unreachable. */
+  async getLiveRegistrationCount(): Promise<number> {
+    const res = await fetch(`${API_BASE}/events`);
+    if (!res.ok) throw new Error('Unable to load events.');
+    const json = await res.json();
+    return (Array.isArray(json?.data) ? json.data : []).filter((e: EventItem) => e.registrationOpen).length;
+  },
+
+  /** Uploads an image (event poster) or a newsletter attachment. Max 5 MB per file. */
+  async uploadFile(kind: 'event-image' | 'newsletter-attachment', file: File) {
+    const data = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+      reader.onerror = () => reject(new Error('Could not read the selected file.'));
+      reader.readAsDataURL(file);
+    });
+    const res = await fetch(`${API_BASE}/admin/uploads`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind, filename: file.name, data }) });
+    if (!res.ok) await throwIfRejected(res);
+    const json = await res.json();
+    return json.data as { storedName: string; filename: string; size: number; mimeType: string; url?: string };
+  },
+
+  async getNewsletterSubscribers() {
+    const res = await fetch(`${API_BASE}/admin/newsletter/subscribers`, { credentials: 'include' });
+    if (!res.ok) await throwIfRejected(res);
+    return await res.json();
+  },
+  async getNewsletterCampaigns() {
+    const res = await fetch(`${API_BASE}/admin/newsletter/campaigns`, { credentials: 'include' });
+    if (!res.ok) await throwIfRejected(res);
+    const json = await res.json(); return json.data || [];
+  },
+  async saveNewsletterDraft(data: Record<string, any>) {
+    const res = await fetch(`${API_BASE}/admin/newsletter/campaigns/draft`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (!res.ok) await throwIfRejected(res); return await res.json();
+  },
+  async sendNewsletterCampaign(data: Record<string, any>) {
+    const res = await fetch(`${API_BASE}/admin/newsletter/campaigns/send`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (!res.ok) await throwIfRejected(res); return await res.json();
+  },
+  async scheduleNewsletterCampaign(data: Record<string, any>) {
+    const res = await fetch(`${API_BASE}/admin/newsletter/campaigns/schedule`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (!res.ok) await throwIfRejected(res); return await res.json();
+  },
+  async cancelNewsletterCampaign(id: string) {
+    const res = await fetch(`${API_BASE}/admin/newsletter/campaigns/${encodeURIComponent(id)}/cancel`, { method: 'PATCH', credentials: 'include' });
+    if (!res.ok) await throwIfRejected(res); return await res.json();
+  },
+
+
+  async getEventRegistrationStats() {
+    const response = await fetch(`${API_BASE}/events/registrations/stats`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch event registration statistics');
+    }
+    return response.json();
+  },
+
+  async getEventAvailability() {
+    const response = await fetch(`${API_BASE}/events/availability`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch event availability');
+    }
+
+    return await response.json();
+  },
+
+
   async submitEventRegistration(data: { eventId: string; eventTitle: string; name: string; email: string; phone: string; organization?: string; notes?: string }) {
     try {
       const res = await fetch(`${API_BASE}/events/register`, {
@@ -319,6 +449,9 @@ export const ApiService = {
     } catch (err) {
       if (err instanceof SubmitError) throw err;
       // network unavailable: simulated success
+      throw new Error(
+        'Unable to submit your registration. Please check your internet connection and try again.'
+      );
     }
     return { success: true, message: 'Registration confirmed! A confirmation pass will be emailed to you.' };
   },

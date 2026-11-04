@@ -165,6 +165,8 @@ export const SITE_LAYOUT = {
     { id: 'volunteersTab', label: 'Volunteers database tab', show: true },
     { id: 'donationsTab', label: 'Donations & 80G receipts tab', show: true },
     { id: 'contactsTab', label: 'Contacts & bulk orders tab', show: true },
+    { id: 'eventsTab', label: 'Events & registrations tab', show: true },
+    { id: 'newsletterTab', label: 'Newsletter campaigns tab', show: true },
     { id: 'mediaTab', label: 'Media & documents manager tab', show: true },
     { id: 'systemTab', label: 'Database & system tab', show: true },
   ],

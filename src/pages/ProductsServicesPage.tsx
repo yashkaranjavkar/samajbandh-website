@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { SectionHeading } from '../components/common/SectionHeading';
 import { BottomCTABand } from '../components/layout/BottomCTABand';
 import { BulkOrderModal } from '../components/modals/BulkOrderModal';
-import { PRODUCTS_DATA, WORKSHOPS_SERVICES, DONATION_PAYMENT_URL } from '../data/mockData';
+import { PRODUCTS_DATA, WORKSHOPS_DATA, DONATION_PAYMENT_URL } from '../data/mockData';
 import { 
   ShoppingBag, 
   Layers, 
@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { PageSections } from '../components/layout/PageSections';
 
+export const WORKSHOPS_SERVICES = WORKSHOPS_DATA;
+
 interface ProductsServicesPageProps {
   onOpenDonate: () => void;
 }
@@ -32,8 +34,9 @@ export const ProductsServicesPage: React.FC<ProductsServicesPageProps> = ({
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
   const [isBulkOpen, setIsBulkOpen] = useState(false);
-  const [selectedProductForBulk, setSelectedProductForBulk] = useState('Asha Reusable Cloth Pads');
+  const [selectedProductForBulk, setSelectedProductForBulk] = useState('ToT Training for Field Staff');
   const [activeTab, setActiveTab] = useState<'products' | 'workshops' | 'care-guide'>('products');
+  const [isWorkshopBooking, setIsWorkshopBooking] = useState(false);
 
   useEffect(() => {
     if (tabParam === 'products' || tabParam === 'workshops' || tabParam === 'care-guide') {
@@ -89,6 +92,7 @@ export const ProductsServicesPage: React.FC<ProductsServicesPageProps> = ({
                         onClick={() => {
                           setSelectedProductForBulk(mainPad.title);
                           setIsBulkOpen(true);
+                          setIsWorkshopBooking(false)
                         }}
                         className="px-7 py-3.5 rounded-xl bg-[#C85A32] hover:bg-[#B84A28] text-white font-bold text-sm shadow-xl transition-all flex items-center gap-2"
                       >
@@ -307,6 +311,7 @@ export const ProductsServicesPage: React.FC<ProductsServicesPageProps> = ({
                           onClick={() => {
                             setSelectedProductForBulk(product.title);
                             setIsBulkOpen(true);
+                            setIsWorkshopBooking(false)
                           }}
                           className="flex-1 py-2.5 rounded-xl bg-[#143D2B] hover:bg-[#1E533B] text-white font-bold text-xs transition-colors"
                         >
@@ -360,7 +365,9 @@ export const ProductsServicesPage: React.FC<ProductsServicesPageProps> = ({
 
                       <button
                         onClick={() => {
-                          setSelectedProductForBulk(`Workshop Booking: ${serv.title}`);
+                          // setSelectedProductForBulk(`Workshop Booking: ${serv.title}`);
+                          setSelectedProductForBulk('ToT Training for Field Staff');
+                          setIsWorkshopBooking(true);
                           setIsBulkOpen(true);
                         }}
                         className="w-full py-2.5 rounded-xl bg-[#C85A32] hover:bg-[#B84A28] text-white text-xs font-bold transition-colors flex items-center justify-center gap-2"
@@ -420,11 +427,12 @@ export const ProductsServicesPage: React.FC<ProductsServicesPageProps> = ({
       />
 
       {/* Bulk Order Modal */}
-      <BulkOrderModal
+      {isBulkOpen && (<BulkOrderModal
         isOpen={isBulkOpen}
         onClose={() => setIsBulkOpen(false)}
         defaultItem={selectedProductForBulk}
-      />
+        lockItem={isWorkshopBooking}
+      /> )}
 
     </div>
   );

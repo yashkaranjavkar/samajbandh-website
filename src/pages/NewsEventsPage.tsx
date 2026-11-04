@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SectionHeading } from '../components/common/SectionHeading';
 import { BottomCTABand } from '../components/layout/BottomCTABand';
-import { NEWS_DATA, EVENTS_DATA } from '../data/mockData';
+import { NEWS_DATA } from '../data/mockData';
+import { ApiService } from '../services/api';
 import { NewsItem, EventItem } from '../types';
 import { 
   Calendar, 
@@ -28,6 +29,14 @@ export const NewsEventsPage: React.FC<NewsEventsPageProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'all' | 'news' | 'events'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [events, setEvents] = useState<EventItem[]>([]);
+
+  // Events are managed from the admin dashboard, so load them from the API.
+  useEffect(() => {
+    let cancelled = false;
+    ApiService.getEvents().then(list => { if (!cancelled) setEvents(list); }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, []);
 
   const filteredNews = NEWS_DATA.filter(n => 
     searchQuery === '' || 
@@ -35,7 +44,7 @@ export const NewsEventsPage: React.FC<NewsEventsPageProps> = ({
     n.summary.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredEvents = EVENTS_DATA.filter(e =>
+  const filteredEvents = events.filter(e =>
     searchQuery === '' ||
     e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     e.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -81,7 +90,7 @@ export const NewsEventsPage: React.FC<NewsEventsPageProps> = ({
                         : 'bg-white text-[#5C6760] border border-[#E5DFC5]'
                     }`}
                   >
-                    All Updates ({NEWS_DATA.length + EVENTS_DATA.length})
+                    All Updates ({NEWS_DATA.length + events.length})
                   </button>
                   <button
                     onClick={() => setActiveTab('events')}
@@ -91,7 +100,7 @@ export const NewsEventsPage: React.FC<NewsEventsPageProps> = ({
                         : 'bg-white text-[#5C6760] border border-[#E5DFC5]'
                     }`}
                   >
-                    Upcoming Events ({EVENTS_DATA.length})
+                    Upcoming Events ({events.length})
                   </button>
                   <button
                     onClick={() => setActiveTab('news')}
@@ -172,10 +181,11 @@ export const NewsEventsPage: React.FC<NewsEventsPageProps> = ({
                         <div className="pt-3 border-t border-[#E5DFC5] flex items-center justify-between">
                           <button
                             onClick={() => onOpenRegistration(ev)}
-                            className="flex-1 py-2.5 rounded-xl bg-[#143D2B] hover:bg-[#1E533B] text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                            disabled={ev.registrationOpen === false}
+                            className="flex-1 py-2.5 rounded-xl bg-[#143D2B] hover:bg-[#1E533B] disabled:bg-slate-300 disabled:text-slate-600 disabled:cursor-not-allowed text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm"
                           >
-                            <span>Register to Participate</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
+                            <span>{ev.registrationOpen === false ? 'Registration Closed' : 'Register to Participate'}</span>
+                            {ev.registrationOpen !== false && <ArrowRight className="w-3.5 h-3.5" />}
                           </button>
                         </div>
                       </div>
@@ -234,7 +244,7 @@ export const NewsEventsPage: React.FC<NewsEventsPageProps> = ({
 
                       <div className="p-6 pt-0">
                         <div className="pt-3 border-t border-[#E5DFC5] flex items-center justify-between text-xs font-bold text-[#143D2B]">
-                          <span>Read Article</span>
+                          {/* <span>Read Article</span> */}
                           <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#143D2B]" />
                         </div>
                       </div>

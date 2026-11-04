@@ -6,7 +6,6 @@ import {
   FileText, 
   Image as ImageIcon, 
   Database, 
-  Download, 
   Search, 
   Filter, 
   CheckCircle2, 
@@ -26,12 +25,20 @@ import {
   Mail,
   Phone,
   MapPin,
-  Check
+  Check,
+  CalendarCheck,
+  Download
 } from 'lucide-react';
 import { PageSections } from '../components/layout/PageSections';
+import { NewsletterCampaigns } from '../components/admin/NewsletterCampaigns';
+
+import { EventManager } from '../components/admin/EventManager';
 
 export const AdminDashboardPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'volunteers' | 'donations' | 'contacts' | 'media' | 'database'>('volunteers');
+  const [activeTab, setActiveTab] = useState<'volunteers' | 'donations' | 'contacts' | 'media' | 'database' | 'events' | 'newsletter'>('volunteers');
+  // const [activeTab, setActiveTab] = useState<
+  //     'volunteers' | 'contacts' | 'events'
+  //   >('volunteers');
   const [loading, setLoading] = useState<boolean>(true);
   const [stats, setStats] = useState<any>(null);
 
@@ -43,9 +50,8 @@ export const AdminDashboardPage: React.FC = () => {
   const [selectedVol, setSelectedVol] = useState<any | null>(null);
   const [editingNotes, setEditingNotes] = useState<string>('');
 
-  // Donations & Contacts
-  const [donations, setDonations] = useState<any[]>([]);
-  const [contacts, setContacts] = useState<any[]>([]);
+  // Donations & Order Inquiries
+  // const [donations, setDonations] = useState<any[]>([]);
   const [bulkOrders, setBulkOrders] = useState<any[]>([]);
 
   // Media Manager
@@ -53,22 +59,60 @@ export const AdminDashboardPage: React.FC = () => {
   const [editingMedia, setEditingMedia] = useState<{ [key: string]: string }>({});
   const [mediaSaveSuccess, setMediaSaveSuccess] = useState<string | null>(null);
 
+  // Email composer
+  const [isMailPanelOpen, setIsMailPanelOpen] = useState(false);
+  const [emailTo, setEmailTo] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
+
+  // Events: the EventManager owns its own data; the dashboard only needs the tab badge count.
+  const [eventRegistrationCount, setEventRegistrationCount] = useState(0);
+
+  // const fetchAllData = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const [st, vols, ords, mAssets] = await Promise.all([
+  //       ApiService.getOverviewStats(),
+  //       ApiService.getVolunteers({ roleType: roleFilter, status: statusFilter, search: searchQuery }),
+  //       ApiService.getBulkOrders(),
+  //       ApiService.getMediaAssets()
+  //     ]);
+
+  //     setStats(st);
+  //     setVolunteers(vols);
+  //     setBulkOrders(ords);
+  //     setMediaAssets(mAssets);
+  //   } catch (err) {
+  //     console.error('Error fetching admin data:', err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   fetchAllData();
+  // }, [roleFilter, statusFilter]);
+
+  // const handleSearchSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   ApiService.getVolunteers({ roleType: roleFilter, status: statusFilter, search: searchQuery }).then(setVolunteers);
+  // };
   const fetchAllData = async () => {
     setLoading(true);
+
     try {
-      const [st, vols, cnts, ords, mAssets] = await Promise.all([
+      const [st, vols, orders] = await Promise.all([
         ApiService.getOverviewStats(),
-        ApiService.getVolunteers({ roleType: roleFilter, status: statusFilter, search: searchQuery }),
-        ApiService.getContacts(),
-        ApiService.getBulkOrders(),
-        ApiService.getMediaAssets()
+        ApiService.getVolunteers({
+          roleType: roleFilter,
+          status: statusFilter,
+          search: searchQuery
+        }),
+        ApiService.getBulkOrders()
       ]);
 
       setStats(st);
       setVolunteers(vols);
-      setContacts(cnts);
-      setBulkOrders(ords);
-      setMediaAssets(mAssets);
+      setBulkOrders(orders);
     } catch (err) {
       console.error('Error fetching admin data:', err);
     } finally {
@@ -82,7 +126,12 @@ export const AdminDashboardPage: React.FC = () => {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    ApiService.getVolunteers({ roleType: roleFilter, status: statusFilter, search: searchQuery }).then(setVolunteers);
+
+    ApiService.getVolunteers({
+      roleType: roleFilter,
+      status: statusFilter,
+      search: searchQuery
+    }).then(setVolunteers);
   };
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
@@ -100,6 +149,18 @@ export const AdminDashboardPage: React.FC = () => {
       setSelectedVol({ ...selectedVol, adminNotes: editingNotes });
     }
     alert('Coordinator notes saved successfully!');
+  };
+
+  const handleBulkOrderStatusChange = async (id: string, status: string) => {
+    try {
+      await ApiService.updateBulkOrderStatus(id, status);
+      setBulkOrders(prev =>
+        prev.map(order => order.id === id ? { ...order, status } : order)
+      );
+    } catch (error) {
+      console.error('Bulk order status update failed:', error);
+      alert('Unable to update order inquiry status. Please try again.');
+    }
   };
 
   const handleDeleteVolunteer = async (id: string) => {
@@ -128,23 +189,45 @@ export const AdminDashboardPage: React.FC = () => {
     fetchAllData();
   };
 
-  const handleBulkOrderStatusChange = async (
-    id: string,
-    status: string
-  ) => {
+  const handleSendEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const to = emailTo.trim();
+    const message = emailMessage.trim();
+
+    if (!to || !message) {
+      alert("Please enter both recipient email and message.");
+      return;
+    }
+
     try {
-      await ApiService.updateBulkOrderStatus(id, status);
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to,
+          message,
+        }),
+      });
 
-      setBulkOrders(prev =>
-        prev.map(order =>
-          order.id === id ? { ...order, status } : order
-        )
-      );
+      const result = await response.json();
 
-      alert('Bulk order status updated successfully!');
+      if (!response.ok) {
+        throw new Error(result.message || "Email could not be sent.");
+      }
+
+      alert("Email sent successfully!");
+
+      setEmailTo("");
+      setEmailMessage("");
+      setIsMailPanelOpen(false);
     } catch (error) {
-      console.error('Bulk order update failed:', error);
-      alert('Unable to update bulk order status.');
+      console.error("Email error:", error);
+      alert(
+        error instanceof Error ? error.message : "Failed to send email."
+      );
     }
   };
 
@@ -226,31 +309,60 @@ export const AdminDashboardPage: React.FC = () => {
                 </div> */}
 
                 <div className="p-4 rounded-2xl bg-white border border-[#E5DFC5] shadow-xs">
-                  <span className="text-[11px] font-bold text-[#5C6760] uppercase block">New Inquiries</span>
-                  <span className="text-2xl font-serif-heading font-bold text-[#1F2421]">{stats.newContacts || 0}</span>
+                  <span className="text-[11px] font-bold text-[#5C6760] uppercase block">Order / Inquiries</span>
+                  <span className="text-2xl font-serif-heading font-bold text-[#C85A32]">
+                    {bulkOrders.length}
+                  </span>
                 </div>
-
-                <div className="p-4 rounded-2xl bg-white border border-[#E5DFC5] shadow-xs">
-                  <span className="text-[11px] font-bold text-[#5C6760] uppercase block">Bulk Orders</span>
-                  <span className="text-2xl font-serif-heading font-bold text-indigo-700">{stats.pendingOrders || 0}</span>
+                <div className="flex items-center justify-end gap-4 mb-5">
+                  <button
+                    type="button"
+                    onClick={() => setIsMailPanelOpen(true)}
+                    className="px-4 py-2.5 rounded-xl bg-[#D99B26] text-[#143D2B] text-xs font-bold hover:bg-amber-400 transition-colors inline-flex items-center gap-2 shadow-sm whitespace-nowrap"
+                  >
+                    <Mail className="w-4 h-4" />
+                    <span>
+                      Send Email
+                    </span>
+                  </button>
                 </div>
               </div>
             ),
 
           // Main Tab Navigation
           tabNav: (
-            <div className="flex flex-wrap gap-2 border-b border-[#E5DFC5] pb-3">
+            // <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-b border-[#E5DFC5] pb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 border-b border-[#E5DFC5] pb-3">
               {[
-                { id: 'volunteers', label: 'Volunteers & Interns Database', icon: <Users className="w-4 h-4" />, count: volunteers.length },
-                // { id: 'donations', label: 'Donations & 80G Receipts', icon: <Heart className="w-4 h-4" />, count: donations.length },
-                { id: 'contacts', label: 'Inquiries & Bulk Orders', icon: <FileText className="w-4 h-4" />, count: contacts.length + bulkOrders.length },
-                { id: 'media', label: 'Images & Documents Manager', icon: <ImageIcon className="w-4 h-4" /> },
-                // { id: 'database', label: 'Database & System Files', icon: <Database className="w-4 h-4" /> }
+                {
+                  id: 'volunteers',
+                  label: 'Volunteers & Interns',
+                  icon: <Users className="w-4 h-4" />,
+                  count: volunteers.length
+                },
+                {
+                  id: 'contacts',
+                  label: 'Recent Inquiries & Partnerships',
+                  icon: <FileText className="w-4 h-4" />,
+                  count: bulkOrders.length
+                },
+                {
+                  id: 'events',
+                  label: 'Event Registrations',
+                  icon: <CalendarCheck className="w-4 h-4" />,
+                  count: eventRegistrationCount
+                },
+                {
+                  id: 'newsletter',
+                  label: 'Newsletter',
+                  icon: <Mail className="w-4 h-4" />,
+                  count: 0
+                },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-4 sm:px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
+                  className={`w-full justify-center px-4 sm:px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
                     activeTab === tab.id
                       ? 'bg-[#143D2B] text-white shadow-md'
                       : 'bg-white text-[#5C6760] hover:text-[#1F2421] border border-[#E5DFC5]'
@@ -258,13 +370,14 @@ export const AdminDashboardPage: React.FC = () => {
                 >
                   {tab.icon}
                   <span>{tab.label}</span>
-                  {tab.count !== undefined && (
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
-                      activeTab === tab.id ? 'bg-[#D99B26] text-[#143D2B]' : 'bg-slate-100 text-slate-700'
-                    }`}>
-                      {tab.count}
-                    </span>
-                  )}
+
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+                    activeTab === tab.id
+                      ? 'bg-[#D99B26] text-[#143D2B]'
+                      : 'bg-slate-100 text-slate-700'
+                  }`}>
+                    {tab.count}
+                  </span>
                 </button>
               ))}
             </div>
@@ -533,6 +646,11 @@ export const AdminDashboardPage: React.FC = () => {
               </div>
             ),
 
+            
+          eventsTab: activeTab === 'events' && <EventManager onRegistrationCount={setEventRegistrationCount} />,
+
+          newsletterTab: activeTab === 'newsletter' && <NewsletterCampaigns />,
+
           // TAB 2: DONATIONS & 80G RECEIPTS
           // donationsTab:
           //   activeTab === 'donations' && (
@@ -592,72 +710,143 @@ export const AdminDashboardPage: React.FC = () => {
           //     </div>
           //   ),
 
-          // TAB 3: CONTACTS & BULK ORDERS
+          // TAB 3: RECENT ORDER INQUIRIES & PARTNERSHIPS
           contactsTab:
             activeTab === 'contacts' && (
-              <div className="space-y-8">
-                {/* Contact Inquiries */}
-                <div className="bg-white rounded-3xl border border-[#E5DFC5] shadow-sm p-6 space-y-4">
-                  <h3 className="text-xl font-bold font-serif-heading text-[#143D2B]">Recent Inquiries & Partnerships</h3>
-                  <div className="space-y-3">
-                    {contacts.map((c) => (
-                      <div key={c.id} className="p-4 rounded-2xl bg-[#FBF9F5] border border-[#E5DFC5] space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span className="font-bold text-sm text-[#1F2421]">{c.name}</span>
-                            {c.organization && <span className="text-xs text-[#87986A] ml-2">({c.organization})</span>}
-                          </div>
-                          <span className="text-xs text-slate-400">{new Date(c.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        <div className="text-xs text-[#5C6760]">
-                          <strong className="text-slate-900">Subject:</strong> {c.subject}
-                        </div>
-                        <p className="text-xs text-slate-600 bg-white p-3 rounded-xl border border-[#E5DFC5]">
-                          {c.message}
-                        </p>
-                        <div className="text-[11px] text-[#143D2B] font-semibold flex items-center gap-4">
-                          <span>Email: {c.email}</span>
-                          <span>Phone: {c.phone}</span>
-                        </div>
-                      </div>
-                    ))}
+              <div className="bg-white rounded-3xl border border-[#E5DFC5] shadow-sm p-6 space-y-5">
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-xl font-bold font-serif-heading text-[#143D2B]">
+                      Recent Inquiries & Partnerships
+                    </h3>
+                    <p className="text-xs text-[#5C6760] mt-1">
+                      All submissions received through the website's Order / Inquiry form.
+                    </p>
                   </div>
+
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold">
+                    {bulkOrders.length} Total Submissions
+                  </span>
+
                 </div>
 
-                {/* Bulk Orders */}
-                <div className="bg-white rounded-3xl border border-[#E5DFC5] shadow-sm p-6 space-y-4">
-                  <h3 className="text-xl font-bold font-serif-heading text-[#143D2B]">Institutional Pad Orders & Distribution Inquiries</h3>
-                  <div className="space-y-3">
-                    {bulkOrders.map((o) => (
-                      <div key={o.id} className="p-4 rounded-2xl bg-white border border-indigo-100 shadow-xs space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-sm text-indigo-950">{o.product} — {o.quantity} Units</span>
-                          {/* <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-indigo-50 text-indigo-800">{o.status}</span> */}
-                          <select
-                            value={o.status || 'inquiry'}
-                            onChange={(e) =>
-                              handleBulkOrderStatusChange(o.id, e.target.value)
-                            }
-                            className="px-2 py-1 rounded-md text-xs font-bold uppercase bg-indigo-50 text-indigo-800 border border-indigo-200"
-                          >
-                            <option value="inquiry">Inquiry</option>
-                            <option value="quoted">Quoted</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="dispatched">Dispatched</option>
-                            <option value="fulfilled">Fulfilled</option>
-                          </select>
-                        </div>
-                        <div className="text-xs text-slate-600">
-                          <strong>Organization:</strong> {o.organization} • <strong>Contact:</strong> {o.name} ({o.phone}, {o.email})
-                        </div>
-                        {o.deliveryAddress && (
-                          <div className="text-xs text-slate-500">
-                            <strong>Delivery Destination:</strong> {o.deliveryAddress}
+                <div className="space-y-4">
+                  {bulkOrders.length === 0 ? (
+                    <div className="py-12 text-center rounded-2xl bg-[#FBF9F5] border border-dashed border-[#E5DFC5]">
+                      <FileText className="w-8 h-8 mx-auto text-slate-300 mb-3" />
+                      <p className="text-sm font-semibold text-[#5C6760]">
+                        No order inquiries received yet.
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        New submissions will appear here.
+                      </p>
+                    </div>
+                  ) : (
+                    [...bulkOrders]
+                      .sort(
+                        (a, b) =>
+                          new Date(b.createdAt || b.created_at || 0).getTime() -
+                          new Date(a.createdAt || a.created_at || 0).getTime()
+                      )
+                      .map((o) => (
+                        <div
+                          key={o.id}
+                          className="p-5 rounded-2xl bg-[#FBF9F5] border border-[#E5DFC5] space-y-4"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase bg-[#FCE9DF] text-[#B94E2B]">
+                                  Order / Inquiry
+                                </span>
+
+                                <span className="text-[11px] text-slate-400">
+                                  {o.createdAt || o.created_at
+                                    ? new Date(o.createdAt || o.created_at).toLocaleString('en-IN')
+                                    : 'Date unavailable'}
+                                </span>
+                              </div>
+
+                              <h4 className="text-base font-bold text-[#143D2B] mt-2">
+                                {o.organization || o.organizationName || o.organization_name || 'Organization not provided'}
+                              </h4>
+                            </div>
+
+                            <select
+                              value={o.status || 'inquiry'}
+                              onChange={(e) =>
+                                handleBulkOrderStatusChange(o.id, e.target.value)
+                              }
+                              className="px-2 py-1 rounded-md text-xs font-bold uppercase bg-indigo-50 text-indigo-800 border border-indigo-200"
+                            >
+                              <option value="inquiry">Inquiry</option>
+                              <option value="quoted">Quoted</option>
+                              <option value="confirmed">Confirmed</option>
+                              <option value="dispatched">Dispatched</option>
+                              <option value="fulfilled">Fulfilled</option>
+                            </select>
                           </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div className="p-3 bg-white rounded-xl border border-[#E5DFC5]">
+                              <span className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                                Contact Person
+                              </span>
+                              <span className="font-semibold text-[#1F2421]">
+                                {o.name || o.contactPerson || o.contact_person || 'Not provided'}
+                              </span>
+                              <span className="block text-slate-500 mt-1">
+                                {o.role || o.designation || 'Designation not provided'}
+                              </span>
+                            </div>
+
+                            <div className="p-3 bg-white rounded-xl border border-[#E5DFC5]">
+                              <span className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                                Contact Details
+                              </span>
+                              <span className="flex items-center gap-2 text-[#1F2421]">
+                                <Mail className="w-3.5 h-3.5 text-[#87986A]" />
+                                {o.email || 'Email not provided'}
+                              </span>
+                              <span className="flex items-center gap-2 text-[#1F2421] mt-1">
+                                <Phone className="w-3.5 h-3.5 text-[#87986A]" />
+                                {o.phone || 'Phone not provided'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div className="p-3 bg-white rounded-xl border border-[#E5DFC5]">
+                              <span className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                                Product / Kit Required
+                              </span>
+                              <span className="font-semibold text-[#143D2B]">
+                                {o.product || o.itemType || o.item_type || 'Not provided'}
+                              </span>
+                            </div>
+
+                            <div className="p-3 bg-white rounded-xl border border-[#E5DFC5]">
+                              <span className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                                Estimated Quantity
+                              </span>
+                              <span className="font-bold text-[#C85A32] text-sm">
+                                {o.quantity ?? 'Not provided'} Units
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="p-3 bg-white rounded-xl border border-[#E5DFC5]">
+                            <span className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                              Target District / Delivery Requirements
+                            </span>
+                            <p className="text-xs text-slate-600 whitespace-pre-wrap">
+                              {o.notes || o.deliveryAddress || o.delivery_address || 'No additional requirements provided.'}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                  )}
                 </div>
               </div>
             ),
@@ -853,17 +1042,13 @@ export const AdminDashboardPage: React.FC = () => {
                           <span>Volunteers & Interns:</span>
                           <strong className="text-[#143D2B]">{volunteers.length} Records</strong>
                         </div>
-                        <div className="flex justify-between border-b border-slate-200 pb-1">
+                        {/* <div className="flex justify-between border-b border-slate-200 pb-1">
                           <span>80G Donations:</span>
                           <strong className="text-emerald-700">{donations.length} Records</strong>
-                        </div>
+                        </div> */}
                         <div className="flex justify-between border-b border-slate-200 pb-1">
-                          <span>Contact Queries:</span>
-                          <strong className="text-slate-900">{contacts.length} Records</strong>
-                        </div>
-                        <div className="flex justify-between border-b border-slate-200 pb-1">
-                          <span>Bulk Pad Orders:</span>
-                          <strong className="text-indigo-700">{bulkOrders.length} Records</strong>
+                          <span>Order / Inquiry Submissions:</span>
+                          <strong className="text-[#C85A32]">{bulkOrders.length} Records</strong>
                         </div>
                       </div>
                     </div>
@@ -880,6 +1065,104 @@ export const AdminDashboardPage: React.FC = () => {
             ),
         }}
       />
+    {isMailPanelOpen && (
+      <div
+        className="fixed inset-0 z-[60] bg-black/40"
+        onClick={() => setIsMailPanelOpen(false)}
+      >
+        <aside
+          className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl p-6 sm:p-7 space-y-6"
+          onClick={(e) => e.stopPropagation()}
+          aria-label="Send email"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#C85A32]">
+                Quick communication
+              </span>
+              <h2 className="text-xl font-bold font-serif-heading text-[#143D2B] mt-1">
+                Send Email
+              </h2>
+              <p className="text-xs text-[#5C6760] mt-1">
+                Enter the recipient and your message.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsMailPanelOpen(false)}
+              className="p-2 rounded-lg hover:bg-slate-100 text-slate-500"
+              aria-label="Close email panel"
+            >
+              ✕
+            </button>
+          </div>
+
+          <form onSubmit={handleSendEmail} className="space-y-4">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="admin-email-to"
+                className="block text-xs font-bold text-[#143D2B]"
+              >
+                To
+              </label>
+
+              <input
+                id="admin-email-to"
+                type="email"
+                required
+                value={emailTo}
+                onChange={(e) => setEmailTo(e.target.value)}
+                placeholder="recipient@example.com"
+                className="w-full px-3.5 py-3 text-sm bg-[#FBF9F5] border border-[#E5DFC5] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#143D2B]"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                htmlFor="admin-email-message"
+                className="block text-xs font-bold text-[#143D2B]"
+              >
+                Message
+              </label>
+
+              <textarea
+                id="admin-email-message"
+                required
+                rows={9}
+                value={emailMessage}
+                onChange={(e) => setEmailMessage(e.target.value)}
+                placeholder="Write your message here..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    e.currentTarget.form?.requestSubmit();
+                  }
+                }}
+                className="w-full px-3.5 py-3 text-sm bg-[#FBF9F5] border border-[#E5DFC5] rounded-xl resize-y focus:outline-none focus:ring-2 focus:ring-[#143D2B]"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Press Enter to send. Use Shift + Enter for a new line.
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 rounded-xl bg-[#143D2B] text-white text-sm font-bold hover:bg-[#1E533B] inline-flex items-center justify-center gap-2"
+            >
+              <Mail className="w-4 h-4" />
+              Send Mail
+            </button>
+
+            {/* <p className="text-[11px] leading-relaxed text-slate-500">
+              This opens the device's configured email application with the
+              recipient and message filled in. Review and press Send there.
+            </p> */}
+          </form>
+        </aside>
+      </div>
+    )}
+
 
     </div>
   );

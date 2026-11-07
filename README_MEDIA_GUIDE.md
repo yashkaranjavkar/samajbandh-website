@@ -40,7 +40,7 @@ Samajbandh/
 
 ### Method 2: Update the Image Link in the Media Config File
 If you want to use a new image name or an external cloud URL (e.g. Google Drive / Imgur / Unsplash):
-1. Open `/public/content/media-config.json`.
+1. Open `/public/content/media-config.json` or `src\data\mockData.ts`.
 2. Find the section you want to change (e.g., `"hero_main"` or `"asha_pad_box"`).
 3. Change the `"url"` to your new image path or web URL:
    ```json
@@ -50,11 +50,6 @@ If you want to use a new image name or an external cloud URL (e.g. Google Drive 
    }
    ```
 4. Save the file.
-
-### Method 3: Use the Built-in Admin Portal
-1. Open the website and click on the **Admin** link in the footer (or visit `/admin`).
-2. Go to the **Media & Documents Manager** tab.
-3. Paste your image URL or choose a preset and click **Save Asset**.
 
 ---
 
